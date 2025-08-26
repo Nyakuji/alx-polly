@@ -3,15 +3,38 @@
 import { useState } from 'react';
 import { Button } from '@/app/components/ui/button';
 import Link from 'next/link';
+import { useAuth } from '@/context/auth-context';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Authentication logic will be implemented here
-    console.log('Login attempt with:', { email, password });
+    setErrorMessage('');
+    setIsLoading(true);
+    
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        setErrorMessage(error.message || 'Failed to sign in');
+        console.error('Login error:', error);
+      } else {
+        // Redirect to polls page on successful login
+        router.push('/polls');
+      }
+    } catch (err) {
+      console.error('Unexpected error during login:', err);
+      setErrorMessage('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -58,12 +81,19 @@ export default function LoginPage() {
             </div>
           </div>
 
+          {errorMessage && (
+            <div className="text-red-500 text-sm text-center">
+              {errorMessage}
+            </div>
+          )}
+          
           <div>
             <Button
               type="submit"
+              disabled={isLoading}
               className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              Sign in
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </div>
           
