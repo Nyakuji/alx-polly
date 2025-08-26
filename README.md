@@ -1,4 +1,27 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Polly - Interactive Polling Application
+
+Polly is a modern web application for creating, sharing, and participating in polls. Get instant feedback from your audience with our intuitive polling platform.
+
+## Features
+
+### User Authentication
+- **User Registration**: Secure sign-up with email validation and password strength requirements
+- **User Login**: Secure authentication with error handling and validation
+- **Form Validation**: Real-time validation feedback as users type with field-specific error messages
+- **User Sessions**: Persistent login sessions using Supabase authentication
+
+### Poll Management
+- **Poll Creation**: Create custom polls with title, description, and multiple options
+- **Poll Viewing**: Browse existing polls with information about votes and creation date
+- **Poll Participation**: Vote on polls and see real-time results with percentage visualization
+- **Poll Navigation**: Intuitive navigation between polls and poll details
+
+### User Interface
+- **Modern UI Components**: Custom form fields, buttons, and inputs with consistent styling
+- **Responsive Design**: Mobile-friendly interface that works across devices
+- **Toast Notifications**: User-friendly notifications for actions like successful login/registration
+- **Loading States**: Visual feedback during form submission with loading spinners
+- **Error Handling**: Intuitive error messages with clear recovery paths
 
 ## Getting Started
 
@@ -16,9 +39,12 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies Used
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Next.js**: React framework for server-side rendering and static site generation
+- **TypeScript**: Type-safe JavaScript for better developer experience
+- **Supabase**: Backend-as-a-Service for authentication and database
+- **Tailwind CSS**: Utility-first CSS framework for styling
 
 ## Learn More
 
