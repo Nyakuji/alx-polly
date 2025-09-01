@@ -15,10 +15,18 @@ export default function CreatePollPage() {
   const [description, setDescription] = useState('');
   const [options, setOptions] = useState(['', '']);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errors, setErrors] = useState<{title?: string, options?: string}>({});
+  const [errors, setErrors] = useState<{title?: string, options?: string, optionErrors?: string[]}>({});
+  const [touched, setTouched] = useState<{title: boolean, options: boolean[]}>({
+    title: false,
+    options: [false, false]
+  });
 
   const addOption = () => {
     setOptions([...options, '']);
+    setTouched(prev => ({
+      ...prev,
+      options: [...prev.options, false]
+    }));
   };
 
   const removeOption = (index: number) => {
@@ -26,36 +34,96 @@ export default function CreatePollPage() {
     const newOptions = [...options];
     newOptions.splice(index, 1);
     setOptions(newOptions);
+    
+    // Update touched state
+    const newTouched = {...touched};
+    newTouched.options.splice(index, 1);
+    setTouched(newTouched);
   };
 
   const updateOption = (index: number, value: string) => {
     const newOptions = [...options];
     newOptions[index] = value;
     setOptions(newOptions);
+    
+    // Validate this option
+    validateOption(index, value);
+  };
+  
+  const handleBlur = (field: 'title' | 'option', index?: number) => {
+    if (field === 'title') {
+      setTouched(prev => ({...prev, title: true}));
+      validateTitle();
+    } else if (field === 'option' && index !== undefined) {
+      const newTouched = {...touched};
+      newTouched.options[index] = true;
+      setTouched(newTouched);
+      validateOption(index, options[index]);
+    }
+  };
+  
+  const validateTitle = () => {
+    const newErrors = {...errors};
+    if (!title.trim()) {
+      newErrors.title = 'Please enter a poll title';
+    } else {
+      delete newErrors.title;
+    }
+    setErrors(newErrors);
+    return !newErrors.title;
+  };
+  
+  const validateOption = (index: number, value: string) => {
+    const newErrors = {...errors};
+    if (!newErrors.optionErrors) {
+      newErrors.optionErrors = [];
+    }
+    
+    if (!value.trim()) {
+      newErrors.optionErrors[index] = 'Option cannot be empty';
+    } else {
+      newErrors.optionErrors[index] = '';
+    }
+    
+    setErrors(newErrors);
+    return value.trim() !== '';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Reset errors
-    setErrors({});
+    // Mark all fields as touched
+    setTouched({
+      title: true,
+      options: options.map(() => true)
+    });
     
-    // Validate form
-    let hasErrors = false;
-    const newErrors: {title?: string, options?: string} = {};
+    // Validate all fields
+    const titleValid = validateTitle();
     
-    if (!title.trim()) {
-      newErrors.title = 'Please enter a poll title';
-      hasErrors = true;
+    // Validate all options
+    const optionsValid = options.map((opt, index) => validateOption(index, opt));
+    
+    // Check if we have at least 2 valid options
+    const validOptionsCount = options.filter((opt, index) => opt.trim() !== '').length;
+    let hasOptionsError = false;
+    
+    if (validOptionsCount < 2) {
+      setErrors(prev => ({
+        ...prev,
+        options: 'Please provide at least 2 valid options'
+      }));
+      hasOptionsError = true;
+    } else {
+      setErrors(prev => {
+        const newErrors = {...prev};
+        delete newErrors.options;
+        return newErrors;
+      });
     }
     
-    if (options.filter(opt => opt.trim()).length < 2) {
-      newErrors.options = 'Please provide at least 2 valid options';
-      hasErrors = true;
-    }
-    
-    if (hasErrors) {
-      setErrors(newErrors);
+    // Check if there are any validation errors
+    if (!titleValid || optionsValid.includes(false) || hasOptionsError) {
       return;
     }
     
@@ -112,8 +180,10 @@ export default function CreatePollPage() {
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => handleBlur('title')}
               placeholder="Enter your question"
               required
+              error={touched.title && !!errors.title}
               icon={
                 <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
@@ -146,18 +216,25 @@ export default function CreatePollPage() {
               <div className="space-y-3">
                 {options.map((option, index) => (
                   <div key={index} className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={option}
-                      onChange={(e) => updateOption(index, e.target.value)}
-                      placeholder={`Option ${index + 1}`}
-                      required
-                      icon={
-                        <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
-                          {index + 1}
-                        </span>
-                      }
-                    />
+                    <div className="w-full">
+                      <Input
+                        type="text"
+                        value={option}
+                        onChange={(e) => updateOption(index, e.target.value)}
+                        onBlur={() => handleBlur('option', index)}
+                        placeholder={`Option ${index + 1}`}
+                        required
+                        error={touched.options[index] && !!errors.optionErrors?.[index]}
+                        icon={
+                          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
+                            {index + 1}
+                          </span>
+                        }
+                      />
+                      {touched.options[index] && errors.optionErrors?.[index] && (
+                        <div className="text-red-500 text-xs mt-1">{errors.optionErrors[index]}</div>
+                      )}
+                    </div>
                     {options.length > 2 && (
                       <button
                         type="button"
