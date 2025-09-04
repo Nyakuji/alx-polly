@@ -126,9 +126,8 @@ export default function RegisterPage() {
     
     try {
       // Register with Supabase
-      const { error } = await signUp(email, password, {
-        data: { full_name: name }
-      });
+      const { error } = await signUp(email, password, name);
+await signUp(email, password, name);
       
       if (error) {
         // Handle specific error cases
@@ -180,7 +179,7 @@ export default function RegisterPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 onBlur={() => handleBlur('name')}
-                error={touched.name && !!errors.name}
+                error={touched.name && errors.name ? 'true' : undefined}
                 icon={
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
@@ -204,7 +203,7 @@ export default function RegisterPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
-                error={touched.email && !!errors.email}
+                error={touched.email && errors.email ? 'true' : undefined}
                 icon={
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
@@ -230,7 +229,7 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => handleBlur('password')}
-                error={touched.password && !!errors.password}
+                error={touched.password && errors.password ? 'true' : undefined}
                 icon={
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
@@ -254,7 +253,7 @@ export default function RegisterPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 onBlur={() => handleBlur('confirmPassword')}
-                error={touched.confirmPassword && !!errors.confirmPassword}
+                error={touched.confirmPassword && errors.confirmPassword ? 'true' : undefined}
                 icon={
                   <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
