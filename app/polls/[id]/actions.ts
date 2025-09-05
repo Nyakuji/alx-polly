@@ -1,9 +1,12 @@
 "use server";
 
+import { supabase } from '@/lib/supabase';
+
 export async function voteOnPoll(pollId: string, formData: FormData) {
   const optionId = formData.get('optionId');
 
-  if (typeof optionId !== 'string' || optionId.length === 0) {
+  // Early validation with clear error message
+  if (typeof optionId !== 'string' || optionId.trim() === '') {
     return { ok: false, error: 'Missing optionId' };
   }
 
@@ -16,16 +19,18 @@ export async function voteOnPoll(pollId: string, formData: FormData) {
   //   created_at timestamptz not null default now()
   // );
   try {
-    const { supabase } = await import('@/lib/supabase');
     const { error } = await supabase
       .from('votes')
-      .insert({ poll_id: pollId, option: optionId });
+      .insert({ poll_id: pollId, option: optionId.trim() });
+
     if (error) {
       return { ok: false, error: error.message };
     }
+
     return { ok: true };
-  } catch (e: any) {
-    return { ok: false, error: e?.message ?? 'Failed to record vote' };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Failed to record vote';
+    return { ok: false, error: message };
   }
 }
 
