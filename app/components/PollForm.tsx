@@ -55,12 +55,25 @@ export default function PollForm() {
       console.log('Creating poll:', pollData);
       
       // Insert poll data into Supabase
-      const { data: poll, error } = await supabase
+      const { data: inserted, error } = await supabase
         .from('polls')
         .insert(pollData)
-        .select();
+        .select()
+        .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase insert error:', {
+          name: (error as any)?.name,
+          message: (error as any)?.message,
+          details: (error as any as { details?: string })?.details,
+          hint: (error as any as { hint?: string })?.hint,
+          code: (error as any as { code?: string })?.code,
+        });
+        throw error;
+      }
+      if (!inserted) {
+        throw new Error('Insert returned no data');
+      }
       
       showToast({
         message: 'Poll created successfully!',
@@ -70,7 +83,16 @@ export default function PollForm() {
       // Redirect to polls page
       router.push('/polls');
     } catch (error) {
-      console.error('Error creating poll:', error);
+      // Surface richer error info to console for debugging
+      const err = error as any;
+      console.error('Error creating poll:', {
+        name: err?.name,
+        message: err?.message,
+        details: err?.details,
+        hint: err?.hint,
+        code: err?.code,
+        error: err,
+      });
       showToast({
         message: 'Failed to create poll. Please try again.',
         type: 'error'
