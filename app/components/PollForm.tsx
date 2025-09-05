@@ -80,8 +80,8 @@ export default function PollForm() {
         type: 'success'
       });
       
-      // Redirect to polls page
-      router.push('/polls');
+      // Redirect to the created poll's detail page using its actual id
+      router.push(`/polls/${inserted.id}`);
     } catch (error) {
       // Surface richer error info to console for debugging
       const err = error as any;
