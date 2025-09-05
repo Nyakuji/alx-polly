@@ -1,12 +1,16 @@
 import Link from 'next/link';
-import { getMockPollById } from '@/lib/mock/polls';
-import { voteOnPoll } from '@/app/polls/[id]/actions';
-import VoteForm from '@/app/polls/[id]/vote-form';
+import { voteOnPoll } from './actions';
+import VoteForm from './vote-form';
+import { supabase } from '@/lib/supabase';
 
 export default async function PollDetailPage({ params }: { params: { id: string } }) {
-  const poll = getMockPollById(params.id);
+  const { data, error } = await supabase
+    .from('polls')
+    .select('id, title, description, options')
+    .eq('id', params.id)
+    .single();
 
-  if (!poll) {
+  if (error || !data) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-2xl font-bold">Poll not found</h1>
@@ -16,7 +20,11 @@ export default async function PollDetailPage({ params }: { params: { id: string 
   }
 
   // Bind server action with poll id to pass into the client form
-  const action = voteOnPoll.bind(null, poll.id);
+  const action = voteOnPoll.bind(null, data.id);
+
+  const options = Array.isArray(data.options)
+    ? (data.options as string[]).map((text) => ({ id: text, text }))
+    : [];
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
@@ -25,12 +33,12 @@ export default async function PollDetailPage({ params }: { params: { id: string 
       </Link>
       
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-2">{poll.title}</h1>
-        {poll.description && (
-          <p className="text-gray-600 mb-6">{poll.description}</p>
+        <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
+        {data.description && (
+          <p className="text-gray-600 mb-6">{data.description}</p>
         )}
 
-        <VoteForm pollId={poll.id} options={poll.options} action={action} />
+        <VoteForm pollId={data.id} options={options} action={action} />
       </div>
     </div>
   );
