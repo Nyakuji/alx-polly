@@ -3,18 +3,20 @@ import { voteOnPoll } from './actions';
 import VoteForm from './vote-form';
 import { supabase } from '@/lib/supabase';
 
-export default async function PollDetailPage({ params }: { params: { id: string } }) {
+export default async function PollDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   const { data, error } = await supabase
     .from('polls')
     .select('id, title, description, options')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error || !data) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-2xl font-bold">Poll not found</h1>
-        <p className="text-gray-600 mt-2">We couldn\'t find a poll with id {params.id}.</p>
+        <p className="text-gray-600 mt-2">We couldn\'t find a poll with id {id}.</p>
       </div>
     );
   }
