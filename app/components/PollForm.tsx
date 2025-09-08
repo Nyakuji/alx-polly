@@ -2,17 +2,19 @@
 
 import { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { FormField } from '@/app/components/ui/form-field';
 import { useToast } from '@/app/components/ui/toast';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
+import { FormValues } from '@/lib/types';
+import { createPoll } from '@/app/services/poll-service';
+import { PollOptionInput } from './PollOptionInput';
 
-type FormValues = {
-  title: string;
-  description: string;
-  options: { text: string }[];
+const defaultValues: FormValues = {
+  title: '',
+  description: '',
+  options: [{ text: '' }, { text: '' }],
 };
 
 export default function PollForm() {
@@ -25,13 +27,8 @@ export default function PollForm() {
     control,
     handleSubmit,
     formState: { errors },
-    trigger,
   } = useForm<FormValues>({
-    defaultValues: {
-      title: '',
-      description: '',
-      options: [{ text: '' }, { text: '' }],
-    },
+    defaultValues,
     mode: 'onBlur',
   });
 
@@ -41,58 +38,16 @@ export default function PollForm() {
   });
 
   const onSubmit = async (data: FormValues) => {
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
-      
-      // Format data for Supabase
-      const pollData = {
-        title: data.title,
-        description: data.description,
-        options: data.options.map(option => option.text),
-        created_at: new Date().toISOString(),
-      };
-      
-      console.log('Creating poll:', pollData);
-      
-      // Insert poll data into Supabase
-      const { data: inserted, error } = await supabase
-        .from('polls')
-        .insert(pollData)
-        .select()
-        .single();
-      
-      if (error) {
-        console.error('Supabase insert error:', {
-          name: (error as any)?.name,
-          message: (error as any)?.message,
-          details: (error as any as { details?: string })?.details,
-          hint: (error as any as { hint?: string })?.hint,
-          code: (error as any as { code?: string })?.code,
-        });
-        throw error;
-      }
-      if (!inserted) {
-        throw new Error('Insert returned no data');
-      }
-      
+      const inserted = await createPoll(data);
       showToast({
         message: 'Poll created successfully!',
         type: 'success'
       });
-      
-      // Redirect to the created poll's detail page using its actual id
       router.push(`/polls/${inserted.id}`);
     } catch (error) {
-      // Surface richer error info to console for debugging
-      const err = error as any;
-      console.error('Error creating poll:', {
-        name: err?.name,
-        message: err?.message,
-        details: err?.details,
-        hint: err?.hint,
-        code: err?.code,
-        error: err,
-      });
+      console.error('Error creating poll:', error);
       showToast({
         message: 'Failed to create poll. Please try again.',
         type: 'error'
@@ -148,35 +103,14 @@ export default function PollForm() {
         >
           <div className="space-y-3">
             {fields.map((field, index) => (
-              <div key={field.id} className="flex items-center gap-2">
-                <div className="w-full">
-                  <Input
-                    {...register(`options.${index}.text`, { 
-                      required: 'Option cannot be empty',
-                      validate: value => value.trim() !== '' || 'Option cannot be empty'
-                    })}
-                    placeholder={`Option ${index + 1}`}
-                    error={errors.options?.[index]?.text?.message}
-                    icon={
-                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
-                        {index + 1}
-                      </span>
-                    }
-                  />
-                </div>
-                
-                {fields.length > 2 && (
-                  <Button 
-                    type="button" 
-                    onClick={() => remove(index)}
-                    className="p-2 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-md"
-                  >
-                    <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                    </svg>
-                  </Button>
-                )}
-              </div>
+              <PollOptionInput
+                key={field.id}
+                index={index}
+                register={register}
+                errors={errors}
+                onRemove={remove}
+                showRemoveButton={fields.length > 2}
+              />
             ))}
             
             {errors.options && (
