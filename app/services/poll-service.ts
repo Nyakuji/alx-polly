@@ -7,6 +7,7 @@ export async function createPoll(data: FormValues) {
     description: data.description,
     options: data.options.map(option => option.text),
     created_at: new Date().toISOString(),
+    expires_at: data.expires_at, // Add expires_at
   };
 
   const { data: inserted, error } = await supabase
