@@ -78,6 +78,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         password,
       });
+      console.log('Supabase signInWithPassword result:', { error });
       return { error };
     } catch (error) {
       console.error('Error signing in:', error);

@@ -29,6 +29,7 @@ export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { showToast } = useToast();
+  const [hasShownRegistrationToast, setHasShownRegistrationToast] = useState(false);
   
   // Validate email format
   const validateEmail = (email: string) => {
@@ -39,13 +40,14 @@ export default function LoginPage() {
   useEffect(() => {
     // Check if user was redirected from registration
     const fromRegister = searchParams.get('registered');
-    if (fromRegister === 'true') {
+    if (fromRegister === 'true' && !hasShownRegistrationToast) {
       showToast({
         message: 'Registration successful! Please sign in.',
         type: 'success'
       });
+      setHasShownRegistrationToast(true);
     }
-  }, [searchParams, showToast]);
+  }, [searchParams, showToast, hasShownRegistrationToast]);
   
   // Real-time validation
   useEffect(() => {
@@ -119,11 +121,14 @@ export default function LoginPage() {
           setErrors({ ...errors, email: error.message });
         } else if (error.message.includes('password')) {
           setErrors({ ...errors, password: error.message });
+        } else if (error.message === 'Invalid login credentials') {
+          setErrors({ ...errors, general: 'Incorrect email or password. Please try again.' });
         } else {
           setErrors({ ...errors, general: error.message || 'Failed to sign in' });
         }
         console.error('Login error:', error);
       } else {
+        console.log('Login successful, attempting toast and redirect');
         // Show success toast and redirect
         showToast({
           message: 'Successfully signed in!',

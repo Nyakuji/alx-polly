@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface ToastProps {
@@ -91,15 +91,17 @@ export function Toast({
 export function useToast() {
   const [toasts, setToasts] = useState<Array<{ id: string; props: ToastProps }>>([]);
 
-  const showToast = (props: Omit<ToastProps, 'onClose'>) => {
+  // Memoize removeToast
+  const removeToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []); // No dependencies, as setToasts is stable
+
+  // Memoize showToast
+  const showToast = useCallback((props: Omit<ToastProps, 'onClose'>) => {
     const id = Math.random().toString(36).substring(2, 9);
     setToasts((prev) => [...prev, { id, props: { ...props, onClose: () => removeToast(id) } }]);
     return id;
-  };
-
-  const removeToast = (id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  };
+  }, [removeToast]); // Depends on removeToast
 
   const ToastContainer = () => (
     <div className="fixed bottom-0 right-0 p-4 space-y-4 z-50">

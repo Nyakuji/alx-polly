@@ -9,6 +9,7 @@ type VoteFormProps = {
   pollId: string;
   options: { id: string; text: string }[];
   action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>;
+  onVoteSuccess: () => void; // New prop
 };
 
 type FormValues = {

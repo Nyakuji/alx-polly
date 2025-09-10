@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { voteOnPoll } from './actions';
-import VoteForm from './vote-form';
 import { supabase } from '@/lib/supabase';
+import PollContent from './poll-content'; // Import the new client component
 
 export default async function PollDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -23,18 +23,25 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     .eq('id', id)
     .single();
 
+  const { data: votesData, error: votesError } = await supabase
+    .from('votes')
+    .select('option')
+    .eq('poll_id', id);
+
   console.log('poll fetch', { id, hasData: !!data, error });
+  console.log('votes fetch', { id, hasVotes: !!votesData, votesError });
 
   if (error || !data) {
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-2xl font-bold">Poll not found</h1>
-        <p className="text-gray-600 mt-2">We couldn\'t find a poll with id {id}.</p>
+        <p className="text-gray-600 mt-2">We couldn't find a poll with id {id}.</p>
       </div>
     );
   }
 
   // Bind server action with poll id to pass into the client form
+  // This action will be passed to PollContent, which then passes it to VoteForm
   const action = voteOnPoll.bind(null, data.id);
 
   const options = Array.isArray(data.options)
@@ -44,30 +51,35 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
   const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
   const isPollExpired = expiresAt ? expiresAt < new Date() : false;
 
+  // Process votes
+  const totalVotes = votesData?.length || 0;
+  const voteCounts = options.map(option => ({
+    ...option,
+    count: votesData?.filter(vote => vote.option === option.id).length || 0,
+  }));
+
+  const optionsWithPercentages = voteCounts.map(option => ({
+    ...option,
+    percentage: totalVotes > 0 ? (option.count / totalVotes) * 100 : 0,
+  }));
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <Link href="/polls" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
         &larr; Back to Polls
       </Link>
       
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
-        {data.description && (
-          <p className="text-gray-600 mb-4">{data.description}</p>
-        )}
-
-        {expiresAt && (
-          <p className="text-sm text-gray-500 mb-4">
-            Expires: {expiresAt.toLocaleDateString()} {expiresAt.toLocaleTimeString()}
-          </p>
-        )}
-
-        {isPollExpired ? (
-          <p className="text-red-600 font-semibold text-lg">This poll has expired.</p>
-        ) : (
-          <VoteForm pollId={data.id} options={options} action={action} />
-        )}
-      </div>
+      <PollContent
+        pollId={data.id}
+        title={data.title}
+        description={data.description}
+        options={options}
+        expiresAt={expiresAt}
+        isPollExpired={isPollExpired}
+        totalVotes={totalVotes}
+        optionsWithPercentages={optionsWithPercentages}
+        action={action}
+      />
     </div>
   );
 }
