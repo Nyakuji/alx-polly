@@ -19,7 +19,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
 
   const { data, error } = await supabase
     .from('polls')
-    .select('id, title, description, options')
+    .select('id, title, description, options, expires_at')
     .eq('id', id)
     .single();
 
@@ -41,6 +41,9 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     ? (data.options as string[]).map((text) => ({ id: text, text }))
     : [];
 
+  const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
+  const isPollExpired = expiresAt ? expiresAt < new Date() : false;
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-3xl">
       <Link href="/polls" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
@@ -50,10 +53,20 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
       <div className="bg-white rounded-lg shadow-md p-6">
         <h1 className="text-2xl font-bold mb-2">{data.title}</h1>
         {data.description && (
-          <p className="text-gray-600 mb-6">{data.description}</p>
+          <p className="text-gray-600 mb-4">{data.description}</p>
         )}
 
-        <VoteForm pollId={data.id} options={options} action={action} />
+        {expiresAt && (
+          <p className="text-sm text-gray-500 mb-4">
+            Expires: {expiresAt.toLocaleDateString()} {expiresAt.toLocaleTimeString()}
+          </p>
+        )}
+
+        {isPollExpired ? (
+          <p className="text-red-600 font-semibold text-lg">This poll has expired.</p>
+        ) : (
+          <VoteForm pollId={data.id} options={options} action={action} />
+        )}
       </div>
     </div>
   );

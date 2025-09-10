@@ -2,7 +2,6 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CreatePollPage from '../page';
-import { supabase } from '@/lib/supabase';
 
 // Mock the Next.js router
 const mockPush = jest.fn();
@@ -20,30 +19,43 @@ jest.mock('@/app/components/ui/toast', () => ({
   }),
 }));
 
+// Mock the poll-service
+jest.mock('@/app/services/poll-service', () => {
+  const mockCreatePoll = jest.fn(); // Define inside the factory
+  return {
+    createPoll: mockCreatePoll,
+    __esModule: true, // Important for default exports
+    mockCreatePoll, // Export it so we can access it in tests
+  };
+});
+
 // --- Helpers ---
 async function fillPollForm({
   title,
   description,
   options,
+  expires_at,
 }: {
   title?: string;
   description?: string;
   options?: string[];
+  expires_at?: string;
 }) {
   if (title) {
     await userEvent.type(screen.getByLabelText(/poll title/i), title);
   }
   if (description) {
-    // Description textarea has label "Description"
     await userEvent.type(screen.getByLabelText(/description/i), description);
   }
   if (options) {
-    // Option inputs have placeholders like "Option 1", "Option 2"
     const optionInputs = screen.getAllByPlaceholderText(/option \d+/i);
     for (let i = 0; i < options.length && i < optionInputs.length; i++) {
       await userEvent.clear(optionInputs[i]);
       await userEvent.type(optionInputs[i], options[i]);
     }
+  }
+  if (expires_at) {
+    await userEvent.type(screen.getByLabelText(/expiration date/i), expires_at);
   }
 }
 
@@ -56,17 +68,6 @@ async function addOption() {
 }
 
 // --- Tests ---
-jest.mock('@/lib/supabase', () => {
-  const insertMock = jest.fn();
-  const selectMock = jest.fn();
-  const singleMock = jest.fn();
-  const fromMock = jest.fn(() => ({ insert: insertMock }));
-  const supabase = { from: fromMock } as unknown as typeof import('@/lib/supabase').supabase;
-  return { supabase, __mocks: { fromMock, insertMock, selectMock, singleMock } };
-});
-
-const { __mocks } = jest.requireMock('@/lib/supabase');
-
 describe('CreatePollPage', () => {
   let consoleLogSpy: jest.SpyInstance;
   let consoleErrorSpy: jest.SpyInstance;
@@ -93,6 +94,7 @@ describe('CreatePollPage', () => {
       const expectedErrors = [
         /please enter a poll title/i,
         /option cannot be empty/i,
+        /please select an expiration date/i,
       ];
 
       expectedErrors.forEach((regex) => {
@@ -112,82 +114,51 @@ describe('CreatePollPage', () => {
     });
   });
 
-  describe('Poll creation with Supabase (unit)', () => {
+  describe('Poll creation', () => {
     test('happy path: inserts and redirects to detail page', async () => {
-      // Arrange supabase mocks to simulate success
       const inserted = { id: '11111111-1111-1111-1111-111111111111' };
-      __mocks.fromMock.mockReturnValue({
-        insert: jest.fn(() => ({
-          select: jest.fn(() => ({ single: jest.fn(async () => ({ data: inserted, error: null })) })),
-        })),
-      });
+      const { mockCreatePoll } = require('@/app/services/poll-service'); // Access the exported mock
+      mockCreatePoll.mockResolvedValueOnce(inserted);
 
       render(<CreatePollPage />);
       await fillPollForm({
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
+        expires_at: '2030-12-31',
       });
       await userEvent.click(getSubmitButton());
 
       await waitFor(() => {
+        expect(mockCreatePoll).toHaveBeenCalledWith(expect.objectContaining({
+          title: 'Test Poll',
+          description: 'Test Description',
+          options: [{ text: 'Blue' }, { text: 'Red' }],
+          expires_at: '2030-12-31',
+        }));
         expect(mockShowToast).toHaveBeenCalledWith({ message: 'Poll created successfully!', type: 'success' });
         expect(mockPush).toHaveBeenCalledWith(`/polls/${inserted.id}`);
       });
     });
 
     test('failure path: shows error toast and no redirect', async () => {
-      // Arrange supabase mocks to simulate failure
-      __mocks.fromMock.mockReturnValue({
-        insert: jest.fn(() => ({
-          select: jest.fn(() => ({ single: jest.fn(async () => ({ data: null, error: { message: 'insert failed' } })) })),
-        })),
-      });
+      const { mockCreatePoll } = require('@/app/services/poll-service'); // Access the exported mock
+      mockCreatePoll.mockRejectedValueOnce(new Error('Failed to create poll'));
 
       render(<CreatePollPage />);
       await fillPollForm({
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
+        expires_at: '2030-12-31',
       });
       await userEvent.click(getSubmitButton());
 
       await waitFor(() => {
+        expect(mockCreatePoll).toHaveBeenCalled();
         expect(mockShowToast).toHaveBeenCalledWith({ message: 'Failed to create poll. Please try again.', type: 'error' });
         expect(mockPush).not.toHaveBeenCalled();
       });
     });
   });
-
-  describe('Poll creation (integration-ish)', () => {
-    test('submits full form and hits Supabase chain correctly', async () => {
-      const inserted = { id: '22222222-2222-2222-2222-222222222222' };
-
-      const single = jest.fn(async () => ({ data: inserted, error: null }));
-      const select = jest.fn(() => ({ single }));
-      const insert = jest.fn(() => ({ select }));
-      __mocks.fromMock.mockReturnValue({ insert });
-
-      render(<CreatePollPage />);
-      await fillPollForm({
-        title: 'Another Poll',
-        description: 'More context',
-        options: ['Cats', 'Dogs'],
-      });
-      await userEvent.click(getSubmitButton());
-
-      await waitFor(() => {
-        expect(__mocks.fromMock).toHaveBeenCalledWith('polls');
-        expect(insert).toHaveBeenCalledWith(expect.objectContaining({
-          title: 'Another Poll',
-          description: 'More context',
-          options: ['Cats', 'Dogs'],
-        }));
-        expect(select).toHaveBeenCalled();
-        expect(single).toHaveBeenCalled();
-        expect(mockPush).toHaveBeenCalledWith(`/polls/${inserted.id}`);
-      });
-    });
-  });
 });
-
