@@ -1,41 +1,66 @@
 "use server";
 
 import { supabase } from '@/lib/supabase';
+import { revalidatePath } from 'next/cache';
 
-export async function voteOnPoll(pollId: string, formData: FormData) {
+type FormState = {
+  message: string;
+  errors: Record<string, string> | null;
+  status: 'error' | 'success' | 'idle';
+};
+
+export async function voteOnPoll(
+  state: FormState,
+  formData: FormData
+): Promise<FormState> {
   const optionId = formData.get('optionId');
+  const pollId = formData.get('pollId');
 
-  // Early validation - return immediately if invalid
-  if (typeof optionId !== 'string' || optionId.trim() === '') {
-    return { ok: false, error: 'Missing optionId' };
+  if (typeof pollId !== 'string' || pollId.trim() === '') {
+    return {
+      message: 'Missing pollId',
+      errors: null,
+      status: 'error',
+    };
   }
 
-  // Persist vote in Supabase `votes` table
-  // Schema suggestion:
-  // create table votes (
-  //   id uuid primary key default gen_random_uuid(),
-  //   poll_id uuid not null references polls(id) on delete cascade,
-  //   option text not null,
-  //   created_at timestamptz not null default now()
-  // );
+  if (typeof optionId !== 'string' || optionId.trim() === '') {
+    return {
+      message: 'Please select an option to vote.',
+      errors: {
+        optionId: 'An option must be selected.',
+      },
+      status: 'error',
+    };
+  }
+
   try {
     const { error } = await supabase
       .from('votes')
-      .insert({ 
-        poll_id: pollId, 
-        option: optionId.trim() 
-      });
+      .insert({ poll_id: pollId, option: optionId.trim() });
 
-    // Early return on Supabase error
     if (error) {
-      return { ok: false, error: error.message };
+      return {
+        message: `Failed to save vote: ${error.message}`,
+        errors: null,
+        status: 'error',
+      };
     }
 
-    return { ok: true };
-  } catch (error) {
-    // Cleaner error handling with proper type checking
-    const message = error instanceof Error ? error.message : 'Failed to record vote';
-    return { ok: false, error: message };
+    revalidatePath(`/polls/${pollId}`);
+
+    return {
+      message: 'Thank you for your vote!',
+      errors: null,
+      status: 'success',
+    };
+  } catch (e) {
+    const message = e instanceof Error ? e.message : 'An unexpected error occurred';
+    return {
+      message: `Failed to record vote: ${message}`,
+      errors: null,
+      status: 'error',
+    };
   }
 }
 

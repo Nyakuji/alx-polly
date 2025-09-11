@@ -1,80 +1,68 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
+import { voteOnPoll } from './actions';
 
 type VoteFormProps = {
   pollId: string;
   options: { id: string; text: string }[];
-  action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>;
 };
 
-type FormValues = {
-  optionId: string;
+const initialState = {
+  message: '',
+  errors: null,
+  status: 'idle' as const,
 };
 
-export default function VoteForm({ pollId, options, action }: VoteFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
-    defaultValues: { optionId: '' },
-    mode: 'onBlur',
-  });
+function SubmitButton() {
+  const { pending } = useFormStatus();
 
-  const [isPending, startTransition] = useTransition();
-  const [submitted, setSubmitted] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  return (
+    <Button type="submit" disabled={pending} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
+      {pending ? 'Submitting…' : 'Submit Vote'}
+    </Button>
+  );
+}
 
-  const onSubmit = (values: FormValues) => {
-    setServerError(null);
-    const fd = new FormData();
-    fd.set('optionId', values.optionId);
+export default function VoteForm({ pollId, options }: VoteFormProps) {
+  const [state, formAction] = useActionState(voteOnPoll, initialState);
 
-    startTransition(async () => {
-      const result = await action(fd);
-      if (!result.ok) {
-        setServerError(result.error ?? 'Failed to submit vote');
-        return;
-      }
-      setSubmitted(true);
-    });
-  };
-
-  if (submitted) {
+  if (state.status === 'success') {
     return (
       <div className="mt-6">
-        <div className="text-center text-green-600 font-medium">Thank you for voting!</div>
+        <div className="text-center text-green-600 font-medium">{state.message}</div>
         <div className="mt-4 text-sm text-gray-600">Results placeholder...</div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form action={formAction} className="space-y-4">
+      <input type="hidden" name="pollId" value={pollId} />
       <div className="space-y-3">
         {options.map((opt) => (
           <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-md">
             <input
               type="radio"
+              name="optionId"
               value={opt.id}
-              {...register('optionId', { required: 'Please select an option' })}
             />
             <span className="font-medium">{opt.text}</span>
           </label>
         ))}
       </div>
 
-      {errors.optionId && (
-        <p className="text-sm text-red-600">{errors.optionId.message}</p>
+      {state.errors?.optionId && (
+        <p className="text-sm text-red-600">{state.errors.optionId}</p>
       )}
 
-      {serverError && (
-        <p className="text-sm text-red-600">{serverError}</p>
+      {state.status === 'error' && !state.errors?.optionId && (
+        <p className="text-sm text-red-600">{state.message}</p>
       )}
 
-      <Button type="submit" disabled={isPending} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-        {isPending ? 'Submitting…' : 'Submit Vote'}
-      </Button>
+      <SubmitButton />
     </form>
   );
 }

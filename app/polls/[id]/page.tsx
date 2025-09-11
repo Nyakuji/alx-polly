@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { voteOnPoll } from './actions';
 import VoteForm from './vote-form';
 import { supabase } from '@/lib/supabase';
 
@@ -29,13 +28,10 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     return (
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <h1 className="text-2xl font-bold">Poll not found</h1>
-        <p className="text-gray-600 mt-2">We couldn\'t find a poll with id {id}.</p>
+        <p className="text-gray-600 mt-2">We couldn't find a poll with id {id}.</p>
       </div>
     );
   }
-
-  // Bind server action with poll id to pass into the client form
-  const action = voteOnPoll.bind(null, data.id);
 
   const options = Array.isArray(data.options)
     ? (data.options as string[]).map((text) => ({ id: text, text }))
@@ -53,7 +49,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
           <p className="text-gray-600 mb-6">{data.description}</p>
         )}
 
-        <VoteForm pollId={data.id} options={options} action={action} />
+        <VoteForm pollId={data.id} options={options} />
       </div>
     </div>
   );
