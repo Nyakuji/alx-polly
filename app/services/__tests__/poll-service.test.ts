@@ -23,11 +23,15 @@ jest.mock('@/lib/supabase', () => {
 });
 
 describe('createPoll', () => {
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 1);
+  const futureISOString = futureDate.toISOString();
+
   const mockFormValues: FormValues = {
     title: 'Test Poll',
     description: 'This is a test poll',
     options: [{ text: 'Option 1' }, { text: 'Option 2' }],
-    expires_at: null,
+    expires_at: futureISOString,
   };
 
   beforeEach(() => {
@@ -42,7 +46,7 @@ describe('createPoll', () => {
       description: 'This is a test poll',
       options: ['Option 1', 'Option 2'],
       created_at: new Date().toISOString(),
-      expires_at: null,
+      expires_at: futureISOString,
     };
 
     // Access the exported mockSingle from the mocked module

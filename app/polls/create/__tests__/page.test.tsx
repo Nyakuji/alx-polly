@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import CreatePollPage from '../page';
 import { supabase } from '@/lib/supabase';
@@ -25,10 +25,12 @@ async function fillPollForm({
   title,
   description,
   options,
+  expires_at,
 }: {
   title?: string;
   description?: string;
   options?: string[];
+  expires_at?: string;
 }) {
   if (title) {
     await userEvent.type(screen.getByLabelText(/poll title/i), title);
@@ -36,6 +38,10 @@ async function fillPollForm({
   if (description) {
     // Description textarea has label "Description"
     await userEvent.type(screen.getByLabelText(/description/i), description);
+  }
+  if (expires_at) {
+    const dateInput = screen.getByLabelText(/expiration date/i);
+    fireEvent.change(dateInput, { target: { value: expires_at } });
   }
   if (options) {
     // Option inputs have placeholders like "Option 1", "Option 2"
@@ -93,10 +99,13 @@ describe('CreatePollPage', () => {
       const expectedErrors = [
         /please enter a poll title/i,
         /option cannot be empty/i,
+        /please select an expiration date/i,
       ];
 
-      expectedErrors.forEach((regex) => {
-        expect(screen.getAllByText(regex).length).toBeGreaterThan(0);
+      await waitFor(() => {
+        expectedErrors.forEach((regex) => {
+          expect(screen.getAllByText(regex).length).toBeGreaterThan(0);
+        });
       });
     });
 
@@ -113,6 +122,10 @@ describe('CreatePollPage', () => {
   });
 
   describe('Poll creation with Supabase (unit)', () => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const futureDateString = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
     test('happy path: inserts and redirects to detail page', async () => {
       // Arrange supabase mocks to simulate success
       const inserted = { id: '11111111-1111-1111-1111-111111111111' };
@@ -127,6 +140,7 @@ describe('CreatePollPage', () => {
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
+        expires_at: futureDateString,
       });
       await userEvent.click(getSubmitButton());
 
@@ -149,6 +163,7 @@ describe('CreatePollPage', () => {
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
+        expires_at: futureDateString,
       });
       await userEvent.click(getSubmitButton());
 
@@ -160,6 +175,10 @@ describe('CreatePollPage', () => {
   });
 
   describe('Poll creation (integration-ish)', () => {
+    const futureDate = new Date();
+    futureDate.setDate(futureDate.getDate() + 1);
+    const futureDateString = futureDate.toISOString().split('T')[0]; // YYYY-MM-DD
+
     test('submits full form and hits Supabase chain correctly', async () => {
       const inserted = { id: '22222222-2222-2222-2222-222222222222' };
 
@@ -173,6 +192,7 @@ describe('CreatePollPage', () => {
         title: 'Another Poll',
         description: 'More context',
         options: ['Cats', 'Dogs'],
+        expires_at: futureDateString,
       });
       await userEvent.click(getSubmitButton());
 
@@ -182,6 +202,7 @@ describe('CreatePollPage', () => {
           title: 'Another Poll',
           description: 'More context',
           options: ['Cats', 'Dogs'],
+          expires_at: expect.any(String),
         }));
         expect(select).toHaveBeenCalled();
         expect(single).toHaveBeenCalled();
@@ -190,4 +211,3 @@ describe('CreatePollPage', () => {
     });
   });
 });
-
