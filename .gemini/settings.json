@@ -1,9 +1,0 @@
-{
-  "selectedAuthType": "oauth-personal",
-  "theme": "Default",
-  "mcpServers": {
-    "context7": {
-      "httpUrl": "https://mcp.context7.com/mcp"
-    }
-  }
-}
