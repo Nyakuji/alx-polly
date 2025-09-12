@@ -3,20 +3,19 @@
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/app/components/ui/button';
-import { Input } from '@/app/components/ui/input';
+import { castVote } from '@/app/services/vote-service';
 
 type VoteFormProps = {
   pollId: string;
   options: { id: string; text: string }[];
-  action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>;
-  onVoteSuccess: () => void; // New prop
+  onVoteSuccess: () => void;
 };
 
 type FormValues = {
   optionId: string;
 };
 
-export default function VoteForm({ pollId, options, action }: VoteFormProps) {
+export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     defaultValues: { optionId: '' },
     mode: 'onBlur',
@@ -28,16 +27,14 @@ export default function VoteForm({ pollId, options, action }: VoteFormProps) {
 
   const onSubmit = (values: FormValues) => {
     setServerError(null);
-    const fd = new FormData();
-    fd.set('optionId', values.optionId);
-
     startTransition(async () => {
-      const result = await action(fd);
+      const result = await castVote(pollId, values.optionId);
       if (!result.ok) {
         setServerError(result.error ?? 'Failed to submit vote');
         return;
       }
       setSubmitted(true);
+      onVoteSuccess();
     });
   };
 

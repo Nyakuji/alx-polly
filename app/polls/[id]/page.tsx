@@ -40,9 +40,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     );
   }
 
-  // Bind server action with poll id to pass into the client form
-  // This action will be passed to PollContent, which then passes it to VoteForm
-  const action = voteOnPoll.bind(null, data.id);
+  
 
   const options = Array.isArray(data.options)
     ? (data.options as string[]).map((text) => ({ id: text, text }))
@@ -78,7 +76,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
         isPollExpired={isPollExpired}
         totalVotes={totalVotes}
         optionsWithPercentages={optionsWithPercentages}
-        action={action}
+        
       />
     </div>
   );
