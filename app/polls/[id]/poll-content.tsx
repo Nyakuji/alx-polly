@@ -13,7 +13,6 @@ type PollContentProps = {
   isPollExpired: boolean;
   totalVotes: number;
   optionsWithPercentages: { id: string; text: string; count: number; percentage: number }[];
-  action: (formData: FormData) => Promise<{ ok: boolean; error?: string }>; // New prop
 };
 
 export default function PollContent({
@@ -25,7 +24,6 @@ export default function PollContent({
   isPollExpired,
   totalVotes,
   optionsWithPercentages,
-  action,
 }: PollContentProps) {
   const [hasVoted, setHasVoted] = useState(false);
 
@@ -63,7 +61,7 @@ export default function PollContent({
           </div>
         </div>
       ) : (
-        <VoteForm pollId={pollId} options={options} action={action} onVoteSuccess={() => setHasVoted(true)} />
+        <VoteForm pollId={pollId} options={options} onVoteSuccess={() => setHasVoted(true)} />
       )}
     </div>
   );
