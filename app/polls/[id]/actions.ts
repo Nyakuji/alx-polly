@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
@@ -22,12 +22,10 @@ export async function voteOnPoll(pollId: string, formData: FormData) {
   //   created_at timestamptz not null default now()
   // );
   try {
-    const { error } = await supabase
-      .from('votes')
-      .insert({ 
-        poll_id: pollId, 
-        option: optionId.trim() 
-      });
+    const { error } = await supabase.from('votes').insert({
+      poll_id: pollId,
+      option: optionId.trim(),
+    });
 
     // Early return on Supabase error
     if (error) {

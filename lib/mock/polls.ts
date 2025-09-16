@@ -36,7 +36,5 @@ const MOCK_POLLS: MockPoll[] = [
 ];
 
 export function getMockPollById(id: string): MockPoll | null {
-  return MOCK_POLLS.find(p => p.id === id) ?? null;
+  return MOCK_POLLS.find((p) => p.id === id) ?? null;
 }
-
-

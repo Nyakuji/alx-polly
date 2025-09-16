@@ -11,7 +11,13 @@ import { updatePollAction } from '../actions';
 
 export default function EditPollPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const { register, control, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    control,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FormValues>({
     resolver: zodResolver(pollSchema),
     defaultValues: {
       title: '',
@@ -49,7 +55,9 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
       <h1 className="text-2xl font-bold mb-6">Edit Poll</h1>
       <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow-md p-6">
         <div className="mb-4">
-          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">
+            Title
+          </label>
           <input
             id="title"
             type="text"
@@ -60,7 +68,9 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
         </div>
 
         <div className="mb-4">
-          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description (Optional)</label>
+          <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+            Description (Optional)
+          </label>
           <textarea
             id="description"
             {...register('description')}
@@ -81,7 +91,11 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
                 />
                 {fields.length > 2 && (
-                  <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700 font-semibold">
+                  <button
+                    type="button"
+                    onClick={() => remove(index)}
+                    className="text-red-500 hover:text-red-700 font-semibold"
+                  >
                     Remove
                   </button>
                 )}
@@ -89,13 +103,19 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
             ))}
           </div>
           {errors.options && <p className="text-red-500 text-xs mt-1">{errors.options.message}</p>}
-          <button type="button" onClick={() => append({ text: '' })} className="mt-3 text-sm text-indigo-600 hover:text-indigo-800">
+          <button
+            type="button"
+            onClick={() => append({ text: '' })}
+            className="mt-3 text-sm text-indigo-600 hover:text-indigo-800"
+          >
             + Add Option
           </button>
         </div>
 
         <div className="mb-6">
-          <label htmlFor="expires_at" className="block text-sm font-medium text-gray-700 mb-1">Expiration Date (Optional)</label>
+          <label htmlFor="expires_at" className="block text-sm font-medium text-gray-700 mb-1">
+            Expiration Date (Optional)
+          </label>
           <input
             id="expires_at"
             type="datetime-local"
@@ -105,7 +125,10 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
         </div>
 
         <div className="flex justify-end">
-          <button type="submit" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+          <button
+            type="submit"
+            className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
             Update Poll
           </button>
         </div>

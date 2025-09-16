@@ -5,18 +5,21 @@ Polly is a modern web application for creating, sharing, and participating in po
 ## Features
 
 ### User Authentication
+
 - **User Registration**: Secure sign-up with email validation and password strength requirements
 - **User Login**: Secure authentication with error handling and validation
 - **Form Validation**: Real-time validation feedback as users type with field-specific error messages
 - **User Sessions**: Persistent login sessions using Supabase authentication
 
 ### Poll Management
+
 - **Poll Creation**: Create custom polls with title, description, and multiple options
 - **Poll Viewing**: Browse existing polls with information about votes and creation date
 - **Poll Participation**: Vote on polls and see real-time results with percentage visualization
 - **Poll Navigation**: Intuitive navigation between polls and poll details
 
 ### User Interface
+
 - **Modern UI Components**: Custom form fields, buttons, and inputs with consistent styling
 - **Responsive Design**: Mobile-friendly interface that works across devices
 - **Toast Notifications**: User-friendly notifications for actions like successful login/registration

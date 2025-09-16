@@ -42,9 +42,7 @@ export default function PollContent({
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-2xl font-bold mb-2">{title}</h1>
-          {description && (
-            <p className="text-gray-600 mb-4">{description}</p>
-          )}
+          {description && <p className="text-gray-600 mb-4">{description}</p>}
         </div>
         <div className="flex space-x-2">
           <Link href={`/polls/${pollId}/edit`} className="text-indigo-600 hover:text-indigo-800">
@@ -66,17 +64,16 @@ export default function PollContent({
         <div className="mt-6">
           <h2 className="text-xl font-semibold mb-4">Results ({totalVotes} votes)</h2>
           <div className="space-y-4">
-            {optionsWithPercentages.map(option => (
+            {optionsWithPercentages.map((option) => (
               <div key={option.id} className="flex flex-col">
                 <div className="flex justify-between text-sm font-medium text-gray-700">
                   <span>{option.text}</span>
-                  <span>{option.percentage.toFixed(1)}% ({option.count})</span>
+                  <span>
+                    {option.percentage.toFixed(1)}% ({option.count})
+                  </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
-                  <div
-                    className="bg-indigo-600 h-2.5 rounded-full"
-                    style={{ width: `${option.percentage}%` }}
-                  ></div>
+                  <div className="bg-indigo-600 h-2.5 rounded-full" style={{ width: `${option.percentage}%` }}></div>
                 </div>
               </div>
             ))}

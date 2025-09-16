@@ -1,4 +1,3 @@
-
 import { createPoll, deletePoll, getPoll, updatePoll } from '../poll-service';
 import { supabase } from '@/lib/supabase';
 import { FormValues } from '@/lib/types';
@@ -111,7 +110,9 @@ describe('Poll Service', () => {
         }),
       });
 
-      await expect(updatePoll(pollId, pollData)).rejects.toThrow('You are not authorized to edit this poll or the poll was not found.');
+      await expect(updatePoll(pollId, pollData)).rejects.toThrow(
+        'You are not authorized to edit this poll or the poll was not found.',
+      );
     });
   });
 
@@ -140,7 +141,9 @@ describe('Poll Service', () => {
         }),
       });
 
-      await expect(deletePoll(pollId)).rejects.toThrow('You are not authorized to delete this poll or the poll was not found.');
+      await expect(deletePoll(pollId)).rejects.toThrow(
+        'You are not authorized to delete this poll or the poll was not found.',
+      );
     });
   });
 });

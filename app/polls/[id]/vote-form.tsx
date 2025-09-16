@@ -16,7 +16,11 @@ type FormValues = {
 };
 
 export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormProps) {
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
     defaultValues: { optionId: '' },
     mode: 'onBlur',
   });
@@ -52,23 +56,15 @@ export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormPro
       <div className="space-y-3">
         {options.map((opt) => (
           <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-md">
-            <input
-              type="radio"
-              value={opt.id}
-              {...register('optionId', { required: 'Please select an option' })}
-            />
+            <input type="radio" value={opt.id} {...register('optionId', { required: 'Please select an option' })} />
             <span className="font-medium">{opt.text}</span>
           </label>
         ))}
       </div>
 
-      {errors.optionId && (
-        <p className="text-sm text-red-600">{errors.optionId.message}</p>
-      )}
+      {errors.optionId && <p className="text-sm text-red-600">{errors.optionId.message}</p>}
 
-      {serverError && (
-        <p className="text-sm text-red-600">{serverError}</p>
-      )}
+      {serverError && <p className="text-sm text-red-600">{serverError}</p>}
 
       <Button type="submit" disabled={isPending} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
         {isPending ? 'Submitting…' : 'Submit Vote'}
@@ -76,5 +72,3 @@ export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormPro
     </form>
   );
 }
-
-

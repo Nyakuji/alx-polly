@@ -23,10 +23,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     .eq('id', id)
     .single();
 
-  const { data: votesData, error: votesError } = await supabase
-    .from('votes')
-    .select('option')
-    .eq('poll_id', id);
+  const { data: votesData, error: votesError } = await supabase.from('votes').select('option').eq('poll_id', id);
 
   console.log('poll fetch', { id, hasData: !!data, error });
   console.log('votes fetch', { id, hasVotes: !!votesData, votesError });
@@ -40,23 +37,19 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
     );
   }
 
-  
-
-  const options = Array.isArray(data.options)
-    ? (data.options as string[]).map((text) => ({ id: text, text }))
-    : [];
+  const options = Array.isArray(data.options) ? (data.options as string[]).map((text) => ({ id: text, text })) : [];
 
   const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
   const isPollExpired = expiresAt ? expiresAt < new Date() : false;
 
   // Process votes
   const totalVotes = votesData?.length || 0;
-  const voteCounts = options.map(option => ({
+  const voteCounts = options.map((option) => ({
     ...option,
-    count: votesData?.filter(vote => vote.option === option.id).length || 0,
+    count: votesData?.filter((vote) => vote.option === option.id).length || 0,
   }));
 
-  const optionsWithPercentages = voteCounts.map(option => ({
+  const optionsWithPercentages = voteCounts.map((option) => ({
     ...option,
     percentage: totalVotes > 0 ? (option.count / totalVotes) * 100 : 0,
   }));
@@ -66,7 +59,7 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
       <Link href="/polls" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
         &larr; Back to Polls
       </Link>
-      
+
       <PollContent
         pollId={data.id}
         title={data.title}
@@ -76,7 +69,6 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
         isPollExpired={isPollExpired}
         totalVotes={totalVotes}
         optionsWithPercentages={optionsWithPercentages}
-        
       />
     </div>
   );

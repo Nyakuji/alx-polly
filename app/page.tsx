@@ -25,7 +25,7 @@ export default function Home() {
           </Link>
         </div>
       </div>
-      
+
       <div className="mt-16 grid gap-8 md:grid-cols-3 max-w-5xl">
         <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
           <div className="text-indigo-600 text-2xl font-bold mb-3">Create</div>
@@ -35,15 +35,11 @@ export default function Home() {
         </div>
         <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
           <div className="text-indigo-600 text-2xl font-bold mb-3">Share</div>
-          <p className="text-gray-600">
-            Share your polls with friends, colleagues, or the public to gather responses.
-          </p>
+          <p className="text-gray-600">Share your polls with friends, colleagues, or the public to gather responses.</p>
         </div>
         <div className="border border-gray-200 rounded-lg p-6 bg-white shadow-sm">
           <div className="text-indigo-600 text-2xl font-bold mb-3">Analyze</div>
-          <p className="text-gray-600">
-            View real-time results and analytics to understand your audience's opinions.
-          </p>
+          <p className="text-gray-600">View real-time results and analytics to understand your audience's opinions.</p>
         </div>
       </div>
     </div>

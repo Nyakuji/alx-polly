@@ -1,4 +1,4 @@
-"use server";
+'use server';
 
 export async function voteOnPoll(pollId: string, formData: FormData) {
   const optionId = formData.get('optionId');
@@ -17,9 +17,7 @@ export async function voteOnPoll(pollId: string, formData: FormData) {
   // );
   try {
     const { supabase } = await import('@/lib/supabase');
-    const { error } = await supabase
-      .from('votes')
-      .insert({ poll_id: pollId, option: optionId });
+    const { error } = await supabase.from('votes').insert({ poll_id: pollId, option: optionId });
     if (error) {
       return { ok: false, error: error.message };
     }
@@ -28,4 +26,3 @@ export async function voteOnPoll(pollId: string, formData: FormData) {
     return { ok: false, error: e?.message ?? 'Failed to record vote' };
   }
 }
-

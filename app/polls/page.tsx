@@ -5,12 +5,14 @@ import { supabase } from '@/lib/supabase';
 export default async function PollsPage() {
   const { data: polls, error } = await supabase
     .from('polls')
-    .select(`
+    .select(
+      `
       id,
       title,
       created_at,
       votes(count)
-    `)
+    `,
+    )
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -29,9 +31,7 @@ export default async function PollsPage() {
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Polls</h1>
         <Link href="/polls/create">
-          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">
-            Create New Poll
-          </Button>
+          <Button className="bg-indigo-600 hover:bg-indigo-700 text-white">Create New Poll</Button>
         </Link>
       </div>
 

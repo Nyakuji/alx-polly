@@ -130,12 +130,14 @@ describe('CreatePollPage', () => {
       await userEvent.click(getSubmitButton());
 
       await waitFor(() => {
-        expect(mockCreatePoll).toHaveBeenCalledWith(expect.objectContaining({
-          title: 'Test Poll',
-          description: 'Test Description',
-          options: [{ text: 'Blue' }, { text: 'Red' }],
-          expires_at: '2030-12-31',
-        }));
+        expect(mockCreatePoll).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Test Poll',
+            description: 'Test Description',
+            options: [{ text: 'Blue' }, { text: 'Red' }],
+            expires_at: '2030-12-31',
+          }),
+        );
         expect(mockShowToast).toHaveBeenCalledWith({ message: 'Poll created successfully!', type: 'success' });
         expect(mockPush).toHaveBeenCalledWith(`/polls/${inserted.id}`);
       });
@@ -156,7 +158,10 @@ describe('CreatePollPage', () => {
 
       await waitFor(() => {
         expect(mockCreatePoll).toHaveBeenCalled();
-        expect(mockShowToast).toHaveBeenCalledWith({ message: 'Failed to create poll. Please try again.', type: 'error' });
+        expect(mockShowToast).toHaveBeenCalledWith({
+          message: 'Failed to create poll. Please try again.',
+          type: 'error',
+        });
         expect(mockPush).not.toHaveBeenCalled();
       });
     });

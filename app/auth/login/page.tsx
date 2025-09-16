@@ -22,7 +22,7 @@ export default function LoginPage() {
     password: boolean;
   }>({
     email: false,
-    password: false
+    password: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const { signIn } = useAuth();
@@ -30,29 +30,29 @@ export default function LoginPage() {
   const searchParams = useSearchParams();
   const { showToast } = useToast();
   const [hasShownRegistrationToast, setHasShownRegistrationToast] = useState(false);
-  
+
   // Validate email format
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
-  
+
   useEffect(() => {
     // Check if user was redirected from registration
     const fromRegister = searchParams.get('registered');
     if (fromRegister === 'true' && !hasShownRegistrationToast) {
       showToast({
         message: 'Registration successful! Please sign in.',
-        type: 'success'
+        type: 'success',
       });
       setHasShownRegistrationToast(true);
     }
   }, [searchParams, showToast, hasShownRegistrationToast]);
-  
+
   // Real-time validation
   useEffect(() => {
     const newErrors = { ...errors };
-    
+
     // Only validate fields that have been touched
     if (touched.email) {
       if (!email) {
@@ -63,7 +63,7 @@ export default function LoginPage() {
         delete newErrors.email;
       }
     }
-    
+
     if (touched.password) {
       if (!password) {
         newErrors.password = 'Password is required';
@@ -73,7 +73,7 @@ export default function LoginPage() {
         delete newErrors.password;
       }
     }
-    
+
     setErrors(newErrors);
   }, [email, password, touched]);
 
@@ -83,25 +83,25 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Mark all fields as touched to show all validation errors
     setTouched({
       email: true,
-      password: true
+      password: true,
     });
-    
+
     // Check if there are any validation errors
     const hasErrors = Object.keys(errors).length > 0;
-    
+
     // Additional validation for empty fields
     if (!email || !password) {
       setErrors({
         ...errors,
-        general: 'Please fill in all required fields'
+        general: 'Please fill in all required fields',
       });
       return;
     }
-    
+
     if (hasErrors) {
       // Focus on the first field with an error
       const firstErrorField = Object.keys(errors)[0];
@@ -109,12 +109,12 @@ export default function LoginPage() {
       if (element) element.focus();
       return;
     }
-    
+
     setIsLoading(true);
-    
+
     try {
       const { error } = await signIn(email, password);
-      
+
       if (error) {
         // Handle specific error cases
         if (error.message.includes('email')) {
@@ -132,7 +132,7 @@ export default function LoginPage() {
         // Show success toast and redirect
         showToast({
           message: 'Successfully signed in!',
-          type: 'success'
+          type: 'success',
         });
         router.push('/polls');
       }
@@ -148,17 +148,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Sign in to your account
-          </h2>
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Sign in to your account</h2>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="space-y-4">
-            <FormField 
-              label="Email address" 
-              htmlFor="email-address"
-              error={touched.email ? errors.email : undefined}
-            >
+            <FormField label="Email address" htmlFor="email-address" error={touched.email ? errors.email : undefined}>
               <Input
                 id="email-address"
                 name="email"
@@ -169,21 +163,22 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
-                error={(touched.email && errors.email) ? "true" : "false"}
+                error={touched.email && errors.email ? 'true' : 'false'}
                 icon={
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
                     <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
                 }
               />
             </FormField>
-            
-            <FormField 
-              label="Password" 
-              htmlFor="password"
-              error={touched.password ? errors.password : undefined}
-            >
+
+            <FormField label="Password" htmlFor="password" error={touched.password ? errors.password : undefined}>
               <Input
                 id="password"
                 name="password"
@@ -194,10 +189,19 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 onBlur={() => handleBlur('password')}
-                error={(touched.password && !!errors.password) ? "true" : "false"}
+                error={touched.password && !!errors.password ? 'true' : 'false'}
                 icon={
-                  <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                  <svg
+                    className="h-5 w-5 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                 }
               />
@@ -209,7 +213,7 @@ export default function LoginPage() {
               {errors.general}
             </div>
           )}
-          
+
           <div>
             <Button
               type="submit"
@@ -218,16 +222,34 @@ export default function LoginPage() {
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <svg
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
                   </svg>
                   Signing in...
                 </>
-              ) : 'Sign in'}
+              ) : (
+                'Sign in'
+              )}
             </Button>
           </div>
-          
+
           <div className="flex items-center justify-center">
             <div className="text-sm">
               <Link href="/auth/register" className="font-medium text-indigo-600 hover:text-indigo-500">

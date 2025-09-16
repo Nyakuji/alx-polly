@@ -1,22 +1,22 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import Navbar from "./components/navigation/navbar";
-import { AuthProvider } from "@/context/auth-context";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import Navbar from './components/navigation/navbar';
+import { AuthProvider } from '@/context/auth-context';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
 });
 
 export const metadata: Metadata = {
-  title: "Polly - Create and Share Polls",
-  description: "A modern polling application for creating and sharing polls",
+  title: 'Polly - Create and Share Polls',
+  description: 'A modern polling application for creating and sharing polls',
 };
 
 export default function RootLayout({
@@ -32,9 +32,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <Navbar />
-          <main className="container mx-auto px-4 py-8">
-            {children}
-          </main>
+          <main className="container mx-auto px-4 py-8">{children}</main>
         </AuthProvider>
       </body>
     </html>
