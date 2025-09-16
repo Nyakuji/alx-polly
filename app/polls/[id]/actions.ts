@@ -1,6 +1,9 @@
 "use server";
 
 import { supabase } from '@/lib/supabase';
+import { revalidatePath } from 'next/cache';
+import { deletePoll, updatePoll } from '@/app/services/poll-service';
+import { FormValues } from '@/lib/types';
 
 export async function voteOnPoll(pollId: string, formData: FormData) {
   const optionId = formData.get('optionId');
@@ -39,4 +42,13 @@ export async function voteOnPoll(pollId: string, formData: FormData) {
   }
 }
 
+export async function deletePollAction(pollId: string) {
+  await deletePoll(pollId);
+  revalidatePath('/polls');
+}
 
+export async function updatePollAction(pollId: string, data: FormValues) {
+  await updatePoll(pollId, data);
+  revalidatePath(`/polls/${pollId}`);
+  revalidatePath('/polls');
+}
