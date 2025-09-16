@@ -1,8 +1,10 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import VoteForm from './vote-form';
-
+import { deletePollAction } from './actions';
 
 type PollContentProps = {
   pollId: string;
@@ -26,13 +28,33 @@ export default function PollContent({
   optionsWithPercentages,
 }: PollContentProps) {
   const [hasVoted, setHasVoted] = useState(false);
+  const router = useRouter();
+
+  const handleDelete = async () => {
+    if (window.confirm('Are you sure you want to delete this poll?')) {
+      await deletePollAction(pollId);
+      router.push('/polls');
+    }
+  };
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h1 className="text-2xl font-bold mb-2">{title}</h1>
-      {description && (
-        <p className="text-gray-600 mb-4">{description}</p>
-      )}
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">{title}</h1>
+          {description && (
+            <p className="text-gray-600 mb-4">{description}</p>
+          )}
+        </div>
+        <div className="flex space-x-2">
+          <Link href={`/polls/${pollId}/edit`} className="text-indigo-600 hover:text-indigo-800">
+            Edit
+          </Link>
+          <button onClick={handleDelete} className="text-red-600 hover:text-red-800">
+            Delete
+          </button>
+        </div>
+      </div>
 
       {expiresAt && (
         <p className="text-sm text-gray-500 mb-4">
