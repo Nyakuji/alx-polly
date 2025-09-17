@@ -1,65 +1,47 @@
-# Polly - Interactive Polling Application
+# 🔖 Project Title & Description
 
-Polly is a modern web application for creating, sharing, and participating in polls. Get instant feedback from your audience with our intuitive polling platform.
+**Project Title:** Polly - Interactive Polling Application
 
-## Features
+**Description:** Polly is a modern web application for creating, sharing, and participating in polls. It's designed for communities, teams, and individuals who need a simple, intuitive platform to gather instant feedback and opinions from their audience.
 
-### User Authentication
+# 🛠️ Tech Stack
 
-- **User Registration**: Secure sign-up with email validation and password strength requirements
-- **User Login**: Secure authentication with error handling and validation
-- **Form Validation**: Real-time validation feedback as users type with field-specific error messages
-- **User Sessions**: Persistent login sessions using Supabase authentication
+- **Programming Language:** TypeScript
+- **Framework:** Next.js (with React)
+- **Backend & Database:** Supabase
+- **Styling:** Tailwind CSS
+- **UI Components:** Shadcn/UI (based on Radix UI)
+- **Testing:** Jest, React Testing Library
+- **Linting & Formatting:** ESLint, Prettier
+- **Package Manager:** npm
 
-### Poll Management
+# 🧠 AI Integration Strategy
 
-- **Poll Creation**: Create custom polls with title, description, and multiple options
-- **Poll Viewing**: Browse existing polls with information about votes and creation date
-- **Poll Participation**: Vote on polls and see real-time results with percentage visualization
-- **Poll Navigation**: Intuitive navigation between polls and poll details
+This project will leverage AI, specifically through IDE/CLI agents, to accelerate development, improve code quality, and maintain high-quality documentation.
 
-### User Interface
+### Code Generation
 
-- **Modern UI Components**: Custom form fields, buttons, and inputs with consistent styling
-- **Responsive Design**: Mobile-friendly interface that works across devices
-- **Toast Notifications**: User-friendly notifications for actions like successful login/registration
-- **Loading States**: Visual feedback during form submission with loading spinners
-- **Error Handling**: Intuitive error messages with clear recovery paths
+I will use AI to scaffold new features and components. This includes:
+- **Component Scaffolding:** Generating boilerplate for new React components, including props, state management, and basic JSX structure.
+- **API Route Generation:** Creating new API endpoints in Next.js, including request/response types and basic logic for interacting with the Supabase backend.
+- **Feature Prototyping:** Quickly building out new features, such as a user profile page or a poll results dashboard, which can then be refined.
 
-## Getting Started
+### Testing
 
-First, run the development server:
+AI will be a key partner in ensuring the application is robust and reliable.
+- **Unit Test Generation:** Creating Jest tests for individual functions and components, ensuring that business logic is correct. For example, generating tests for a service function like `poll-service.ts`.
+- **Integration Test Scaffolding:** Generating integration test templates that can be filled in to test user flows, such as creating a poll or casting a vote.
+- **Test Refinement:** Analyzing existing tests to suggest improvements, add more edge cases, and increase overall test coverage.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Documentation
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+AI will help maintain clear and comprehensive documentation.
+- **Docstrings & Inline Comments:** Generating JSDoc comments for functions and clarifying complex code blocks with concise inline comments.
+- **README Maintenance:** Assisting in updating this `README.md` with new features, architectural changes, and setup instructions.
 
-## Technologies Used
+### Context-Aware Techniques
 
-- **Next.js**: React framework for server-side rendering and static site generation
-- **TypeScript**: Type-safe JavaScript for better developer experience
-- **Supabase**: Backend-as-a-Service for authentication and database
-- **Tailwind CSS**: Utility-first CSS framework for styling
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+To ensure the AI generates accurate and relevant code, I will provide it with specific context:
+- **API & Schema Definitions:** Supplying the AI with the Supabase database schema or API specifications to generate correct data-access code.
+- **File Trees & Code Snippets:** Providing the project's file structure or the content of relevant files (`lib/types.ts`, `app/polls/[id]/page.tsx`, etc.) to give the AI a clear understanding of the existing codebase.
+- **Diffs for Refactoring:** When refactoring code, I will provide a `git diff` to the AI, allowing it to understand the proposed changes and provide more accurate suggestions or implementations.
