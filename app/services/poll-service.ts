@@ -9,25 +9,22 @@ export async function createPoll(data: FormValues) {
     throw new Error('User not found');
   }
 
+  const options = data.options.map(({ text }) => text).filter(Boolean);
+  if (options.length < 2) {
+    throw new Error('A poll requires at least two non-empty options.');
+  }
+
   const pollData = {
     title: data.title,
     description: data.description,
-    options: data.options.map((option) => option.text),
-    created_at: new Date().toISOString(),
-    expires_at: data.expires_at, // Add expires_at
-    user_id: user.id,
+    options,
+    created_by: user.id,
   };
 
   const { data: inserted, error } = await supabase.from('polls').insert(pollData).select().single();
 
   if (error) {
-    // Log rich error info for debugging
-    console.error('Supabase insert error:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
+    console.error('Supabase insert error:', error);
     throw new Error('Failed to create poll in database.');
   }
 
@@ -42,12 +39,7 @@ export async function getPoll(id: string) {
   const { data, error } = await supabase.from('polls').select('*').eq('id', id).single();
 
   if (error) {
-    console.error('Supabase select error:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
+    console.error('Supabase select error:', error);
     throw new Error('Failed to fetch poll from database.');
   }
 
@@ -62,22 +54,21 @@ export async function updatePoll(id: string, data: FormValues) {
     throw new Error('User not found');
   }
 
+  const options = data.options.map(({ text }) => text).filter(Boolean);
+  if (options.length < 2) {
+    throw new Error('A poll requires at least two non-empty options.');
+  }
+
   const pollData = {
     title: data.title,
     description: data.description,
-    options: data.options.map((option) => option.text),
-    expires_at: data.expires_at,
+    options,
   };
 
-  const { data: updated, error } = await supabase.from('polls').update(pollData).match({ id, user_id: user.id });
+  const { data: updated, error } = await supabase.from('polls').update(pollData).match({ id, created_by: user.id });
 
   if (error) {
-    console.error('Supabase update error:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
+    console.error('Supabase update error:', error);
     throw new Error('Failed to update poll in database.');
   }
 
@@ -96,15 +87,10 @@ export async function deletePoll(id: string) {
     throw new Error('User not found');
   }
 
-  const { error, data } = await supabase.from('polls').delete().match({ id, user_id: user.id });
+  const { error, data } = await supabase.from('polls').delete().match({ id, created_by: user.id });
 
   if (error) {
-    console.error('Supabase delete error:', {
-      message: error.message,
-      details: error.details,
-      hint: error.hint,
-      code: error.code,
-    });
+    console.error('Supabase delete error:', error);
     throw new Error('Failed to delete poll from database.');
   }
 
