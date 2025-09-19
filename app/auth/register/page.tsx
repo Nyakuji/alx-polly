@@ -1,156 +1,43 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { useAuth } from '@/context/auth-context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { FormField } from '@/app/components/ui/form-field';
-import { useToast } from '@/app/components/ui/toast';
+
+type FormValues = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+};
 
 export default function RegisterPage() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [errors, setErrors] = useState<{
-    name?: string;
-    email?: string;
-    password?: string;
-    confirmPassword?: string;
-    general?: string;
-  }>({});
-  const [touched, setTouched] = useState<{
-    name: boolean;
-    email: boolean;
-    password: boolean;
-    confirmPassword: boolean;
-  }>({
-    name: false,
-    email: false,
-    password: false,
-    confirmPassword: false,
-  });
-  const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const router = useRouter();
-  const { showToast } = useToast();
+  const [apiError, setApiError] = useState<string | null>(null);
 
-  // Validate email format
-  const validateEmail = (email: string) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>();
 
-  // Real-time validation
-  useEffect(() => {
-    const newErrors = { ...errors };
+  const password = watch('password');
 
-    // Only validate fields that have been touched
-    if (touched.name && name.trim().length < 2) {
-      newErrors.name = 'Name must be at least 2 characters';
+  const onSubmit = async (data: FormValues) => {
+    setApiError(null);
+    const { error } = await signUp(data.email, data.password, data.name);
+
+    if (error) {
+      setApiError(error.message || 'An unexpected error occurred.');
     } else {
-      delete newErrors.name;
-    }
-
-    if (touched.email) {
-      if (!email) {
-        newErrors.email = 'Email is required';
-      } else if (!validateEmail(email)) {
-        newErrors.email = 'Please enter a valid email address';
-      } else {
-        delete newErrors.email;
-      }
-    }
-
-    if (touched.password) {
-      if (password.length < 6) {
-        newErrors.password = 'Password must be at least 6 characters';
-      } else if (!/[A-Z]/.test(password)) {
-        newErrors.password = 'Password must contain at least one uppercase letter';
-      } else if (!/[0-9]/.test(password)) {
-        newErrors.password = 'Password must contain at least one number';
-      } else {
-        delete newErrors.password;
-      }
-    }
-
-    if (touched.confirmPassword) {
-      if (password !== confirmPassword) {
-        newErrors.confirmPassword = 'Passwords do not match';
-      } else {
-        delete newErrors.confirmPassword;
-      }
-    }
-
-    setErrors(newErrors);
-  }, [name, email, password, confirmPassword, touched]);
-
-  const handleBlur = (field: keyof typeof touched) => {
-    setTouched({ ...touched, [field]: true });
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Mark all fields as touched to show all validation errors
-    setTouched({
-      name: true,
-      email: true,
-      password: true,
-      confirmPassword: true,
-    });
-
-    // Check if there are any validation errors
-    const hasErrors = Object.keys(errors).length > 0;
-
-    // Additional validation for empty fields
-    if (!name || !email || !password || !confirmPassword) {
-      setErrors({
-        ...errors,
-        general: 'Please fill in all required fields',
-      });
-      return;
-    }
-
-    if (hasErrors) {
-      // Focus on the first field with an error
-      const firstErrorField = Object.keys(errors)[0];
-      const element = document.getElementById(firstErrorField);
-      if (element) element.focus();
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Register with Supabase
-      const { error } = await signUp(email, password, name);
-      await signUp(email, password, name);
-
-      if (error) {
-        // Handle specific error cases
-        if (error.message.includes('email')) {
-          setErrors({ ...errors, email: error.message });
-        } else {
-          setErrors({ ...errors, general: error.message || 'Failed to register' });
-        }
-        console.error('Registration error:', error);
-      } else {
-        // Show success toast and redirect
-        showToast({
-          message: 'Registration successful! Redirecting to login...',
-          type: 'success',
-        });
-        // Redirect to login page on successful registration
-        router.push('/auth/login?registered=true');
-      }
-    } catch (err) {
-      console.error('Unexpected error during registration:', err);
-      setErrors({ ...errors, general: 'An unexpected error occurred. Please try again later.' });
-    } finally {
-      setIsLoading(false);
+      router.push('/auth/login?registered=true');
     }
   };
 
@@ -160,20 +47,19 @@ export default function RegisterPage() {
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Create your account</h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="space-y-4">
-            <FormField label="Full Name" htmlFor="name" error={touched.name ? errors.name : undefined}>
+            <FormField label="Full Name" htmlFor="name" error={errors.name?.message}>
               <Input
                 id="name"
-                name="name"
                 type="text"
                 autoComplete="name"
-                required
                 placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onBlur={() => handleBlur('name')}
-                error={touched.name && errors.name ? 'true' : undefined}
+                {...register('name', {
+                  required: 'Name is required',
+                  minLength: { value: 2, message: 'Name must be at least 2 characters' },
+                })}
+                error={errors.name?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -191,18 +77,20 @@ export default function RegisterPage() {
               />
             </FormField>
 
-            <FormField label="Email address" htmlFor="email-address" error={touched.email ? errors.email : undefined}>
+            <FormField label="Email address" htmlFor="email-address" error={errors.email?.message}>
               <Input
                 id="email-address"
-                name="email"
                 type="email"
                 autoComplete="email"
-                required
                 placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={() => handleBlur('email')}
-                error={touched.email && errors.email ? 'true' : undefined}
+                {...register('email', {
+                  required: 'Email is required',
+                  pattern: {
+                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                    message: 'Please enter a valid email address',
+                  },
+                })}
+                error={errors.email?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -221,19 +109,22 @@ export default function RegisterPage() {
               label="Password"
               htmlFor="password"
               description="Must be at least 6 characters with one uppercase letter and one number"
-              error={touched.password ? errors.password : undefined}
+              error={errors.password?.message}
             >
               <Input
                 id="password"
-                name="password"
                 type="password"
                 autoComplete="new-password"
-                required
                 placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                onBlur={() => handleBlur('password')}
-                error={touched.password && errors.password ? 'true' : undefined}
+                {...register('password', {
+                  required: 'Password is required',
+                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
+                  pattern: {
+                    value: /^(?=.*[A-Z])(?=.*[0-9])/,
+                    message: 'Password must contain at least one uppercase letter and one number',
+                  },
+                })}
+                error={errors.password?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -254,19 +145,19 @@ export default function RegisterPage() {
             <FormField
               label="Confirm Password"
               htmlFor="confirm-password"
-              error={touched.confirmPassword ? errors.confirmPassword : undefined}
+              error={errors.confirmPassword?.message}
             >
               <Input
                 id="confirm-password"
-                name="confirm-password"
                 type="password"
                 autoComplete="new-password"
-                required
                 placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                onBlur={() => handleBlur('confirmPassword')}
-                error={touched.confirmPassword && errors.confirmPassword ? 'true' : undefined}
+                {...register('confirmPassword', {
+                  required: 'Please confirm your password',
+                  validate: (value) =>
+                    value === password || 'Passwords do not match',
+                })}
+                error={errors.confirmPassword?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -285,19 +176,19 @@ export default function RegisterPage() {
             </FormField>
           </div>
 
-          {errors.general && (
+          {apiError && (
             <div className="text-red-500 text-sm text-center p-2 bg-red-50 border border-red-200 rounded-md">
-              {errors.general}
+              {apiError}
             </div>
           )}
 
           <div>
             <Button
               type="submit"
-              disabled={isLoading}
+              disabled={isSubmitting}
               className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <svg
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
