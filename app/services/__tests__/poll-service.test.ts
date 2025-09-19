@@ -9,6 +9,8 @@ jest.mock('@/lib/supabase', () => ({
     select: jest.fn().mockReturnThis(),
     single: jest.fn(),
     eq: jest.fn().mockReturnThis(),
+    update: jest.fn().mockReturnThis(),
+    match: jest.fn(),
     delete: jest.fn().mockReturnThis(),
     auth: {
       getUser: jest.fn(),
@@ -33,9 +35,9 @@ describe('Poll Service', () => {
         title: 'Test Poll',
         description: 'Test Description',
         options: [{ text: 'Option 1' }, { text: 'Option 2' }],
-        expires_at: null,
       };
-      const mockInsertedData = { id: '123', ...pollData, user_id: mockUser.id };
+      // The service now adds created_by
+      const mockInsertedData = { id: '123', ...pollData, created_by: mockUser.id };
       (supabase.from as jest.Mock).mockReturnValue({
         insert: jest.fn().mockReturnValue({
           select: jest.fn().mockReturnValue({
@@ -48,7 +50,10 @@ describe('Poll Service', () => {
 
       expect(result).toEqual(mockInsertedData);
       expect(supabase.from).toHaveBeenCalledWith('polls');
-      expect(supabase.from('polls').insert).toHaveBeenCalledWith(expect.objectContaining({ user_id: mockUser.id }));
+      // Check that the data sent to insert has `created_by`
+      expect(supabase.from('polls').insert).toHaveBeenCalledWith(
+        expect.objectContaining({ created_by: mockUser.id })
+      );
     });
   });
 
@@ -79,13 +84,12 @@ describe('Poll Service', () => {
       const pollData: FormValues = {
         title: 'Updated Poll',
         description: 'Updated Description',
-        options: [{ text: 'Updated Option 1' }],
-        expires_at: null,
+        options: [{ text: 'Updated Option 1' }, { text: 'Updated Option 2' }], // FIX: Provide at least two options
       };
       const mockUpdatedPoll = { id: pollId, ...pollData };
 
       (supabase.from as jest.Mock).mockReturnValue({
-        update: jest.fn().mockReturnValueOnce({
+        update: jest.fn().mockReturnValue({
           match: jest.fn().mockResolvedValue({ data: [mockUpdatedPoll], error: null }),
         }),
       });
@@ -93,6 +97,7 @@ describe('Poll Service', () => {
       const result = await updatePoll(pollId, pollData);
 
       expect(result).toEqual(mockUpdatedPoll);
+      expect(supabase.from('polls').update().match).toHaveBeenCalledWith({ id: pollId, created_by: mockUser.id });
     });
 
     it('should not update a poll if user is not the owner', async () => {
@@ -100,18 +105,17 @@ describe('Poll Service', () => {
       const pollData: FormValues = {
         title: 'Updated Poll',
         description: 'Updated Description',
-        options: [{ text: 'Updated Option 1' }],
-        expires_at: null,
+        options: [{ text: 'Updated Option 1' }, { text: 'Updated Option 2' }], // FIX: Provide at least two options
       };
 
       (supabase.from as jest.Mock).mockReturnValue({
-        update: jest.fn().mockReturnValueOnce({
-          match: jest.fn().mockResolvedValue({ data: [], error: null }),
+        update: jest.fn().mockReturnValue({
+          match: jest.fn().mockResolvedValue({ data: [], error: null }), // Simulate no matching row found
         }),
       });
 
       await expect(updatePoll(pollId, pollData)).rejects.toThrow(
-        'You are not authorized to edit this poll or the poll was not found.',
+        'You are not authorized to edit this poll or the poll was not found.'
       );
     });
   });
@@ -122,7 +126,7 @@ describe('Poll Service', () => {
       const mockDeletedPoll = { id: pollId };
 
       (supabase.from as jest.Mock).mockReturnValue({
-        delete: jest.fn().mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
           match: jest.fn().mockResolvedValue({ data: [mockDeletedPoll], error: null }),
         }),
       });
@@ -130,13 +134,14 @@ describe('Poll Service', () => {
       const result = await deletePoll(pollId);
 
       expect(result).toEqual([mockDeletedPoll]);
+      expect(supabase.from('polls').delete().match).toHaveBeenCalledWith({ id: pollId, created_by: mockUser.id });
     });
 
     it('should not delete a poll if user is not the owner', async () => {
       const pollId = '123';
 
       (supabase.from as jest.Mock).mockReturnValue({
-        delete: jest.fn().mockReturnValueOnce({
+        delete: jest.fn().mockReturnValue({
           match: jest.fn().mockResolvedValue({ data: [], error: null }),
         }),
       });
