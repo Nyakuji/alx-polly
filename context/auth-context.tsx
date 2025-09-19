@@ -2,53 +2,89 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Session, User } from '@supabase/supabase-js';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+
+// Define our custom user profile type
+export type UserProfile = {
+  id: string;
+  email?: string;
+  role: string | null;
+  full_name: string | null;
+};
 
 type AuthContextType = {
-  user: User | null;
+  user: UserProfile | null;
   session: Session | null;
   isLoading: boolean;
-  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Get session from Supabase
-    const getSession = async () => {
+    const getSessionAndProfile = async () => {
       setIsLoading(true);
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-      if (error) {
-        console.error('Error getting session:', error);
+      if (sessionError) {
+        console.error('Error getting session:', sessionError);
       }
 
-      if (session) {
-        setSession(session);
-        setUser(session.user);
-      }
+      if (session?.user) {
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
 
+        if (profileError) {
+          console.error('Error getting user profile:', profileError);
+        } else {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            role: profile.role,
+            full_name: profile.full_name,
+          });
+        }
+      }
+      setSession(session);
       setIsLoading(false);
     };
 
-    getSession();
+    getSessionAndProfile();
 
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      setIsLoading(true);
+      if (session?.user) {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error('Error getting profile on auth change:', error);
+          setUser(null);
+        } else {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            role: profile.role,
+            full_name: profile.full_name,
+          });
+        }
+      } else {
+        setUser(null);
+      }
       setSession(session);
-      setUser(session?.user ?? null);
       setIsLoading(false);
     });
 
@@ -58,51 +94,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: name,
-          },
-        },
-      });
-      return { error };
-    } catch (error) {
-      console.error('Error signing up:', error);
-      return { error };
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      return { error: signUpError };
     }
+    if (!signUpData.user) {
+        return { error: { message: "Signup did not return a user." } };
+    }
+
+    // The trigger has already created the profile. Now update it with the full_name.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ full_name: name })
+      .eq('id', signUpData.user.id);
+
+    if (profileError) {
+      console.error('Error updating profile with name:', profileError);
+      // Don't block the user flow, but log the error.
+    }
+
+    return { error: null };
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      console.log('Supabase signInWithPassword result:', { error });
-      return { error };
-    } catch (error) {
-      console.error('Error signing in:', error);
-      return { error };
-    }
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error };
   };
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
+    await supabase.auth.signOut();
+    setUser(null);
   };
 
   const value = {
-    user,
     session,
+    user,
     isLoading,
-    signUp,
     signIn,
+    signUp,
     signOut,
   };
 
