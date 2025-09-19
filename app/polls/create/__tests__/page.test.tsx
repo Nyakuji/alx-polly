@@ -34,12 +34,10 @@ async function fillPollForm({
   title,
   description,
   options,
-  expires_at,
 }: {
   title?: string;
   description?: string;
   options?: string[];
-  expires_at?: string;
 }) {
   if (title) {
     await userEvent.type(screen.getByLabelText(/poll title/i), title);
@@ -53,9 +51,6 @@ async function fillPollForm({
       await userEvent.clear(optionInputs[i]);
       await userEvent.type(optionInputs[i], options[i]);
     }
-  }
-  if (expires_at) {
-    await userEvent.type(screen.getByLabelText(/expiration date/i), expires_at);
   }
 }
 
@@ -94,11 +89,12 @@ describe('CreatePollPage', () => {
       const expectedErrors = [
         /please enter a poll title/i,
         /option cannot be empty/i,
-        /please select an expiration date/i,
       ];
 
-      expectedErrors.forEach((regex) => {
-        expect(screen.getAllByText(regex).length).toBeGreaterThan(0);
+      await waitFor(() => {
+        expectedErrors.forEach((regex) => {
+          expect(screen.queryAllByText(regex).length).toBeGreaterThan(0);
+        });
       });
     });
 
@@ -125,7 +121,6 @@ describe('CreatePollPage', () => {
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
-        expires_at: '2030-12-31',
       });
       await userEvent.click(getSubmitButton());
 
@@ -135,7 +130,6 @@ describe('CreatePollPage', () => {
             title: 'Test Poll',
             description: 'Test Description',
             options: [{ text: 'Blue' }, { text: 'Red' }],
-            expires_at: '2030-12-31',
           }),
         );
         expect(mockShowToast).toHaveBeenCalledWith({ message: 'Poll created successfully!', type: 'success' });
@@ -152,7 +146,6 @@ describe('CreatePollPage', () => {
         title: 'Test Poll',
         description: 'Test Description',
         options: ['Blue', 'Red'],
-        expires_at: '2030-12-31',
       });
       await userEvent.click(getSubmitButton());
 
