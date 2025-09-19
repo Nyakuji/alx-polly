@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Session, User as SupabaseUser } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 // Define our custom user profile type
 export type UserProfile = {
@@ -29,62 +29,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const getSessionAndProfile = async () => {
-      setIsLoading(true);
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-      if (sessionError) {
-        console.error('Error getting session:', sessionError);
-      }
-
-      if (session?.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profileError) {
-          console.error('Error getting user profile:', profileError);
-        } else {
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            role: profile.role,
-            full_name: profile.full_name,
-          });
-        }
-      }
+    // onAuthStateChange is called on initialization, so we don't need getInitialSession
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setIsLoading(false);
-    };
-
-    getSessionAndProfile();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setIsLoading(true);
       if (session?.user) {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) {
-          console.error('Error getting profile on auth change:', error);
-          setUser(null);
-        } else {
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            role: profile.role,
-            full_name: profile.full_name,
-          });
-        }
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+          // Custom claims are in app_metadata
+          role: session.user.app_metadata?.role || 'user',
+          full_name: session.user.app_metadata?.full_name || null,
+        });
       } else {
         setUser(null);
       }
-      setSession(session);
       setIsLoading(false);
     });
 
@@ -94,35 +52,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    // Pass the full_name in the options.
+    // A database trigger will use this to create the user's profile.
+    const { error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: {
+          full_name: name,
+        },
+      },
     });
 
-    if (signUpError) {
-      return { error: signUpError };
-    }
-    if (!signUpData.user) {
-        return { error: { message: "Signup did not return a user." } };
-    }
-
-    // The trigger has already created the profile. Now update it with the full_name.
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ full_name: name })
-      .eq('id', signUpData.user.id);
-
-    if (profileError) {
-      console.error('Error updating profile with name:', profileError);
-      // Don't block the user flow, but log the error.
-    }
-
-    return { error: null };
-  };
-
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    // The onAuthStateChange listener will handle setting the user and session state if the user is logged in.
+    // Since the user is redirected to the login page, we don't need to refresh the session here.
+    // They will get a fresh session with claims upon logging in.
     return { error };
+  };
+  const signIn = async (email: string, password: string) => {
+    console.log('Attempting to sign in...');
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      console.error('Supabase signIn error:', error);
+      return { error };
+    }
+
+    if (data.session) {
+      console.log('Supabase signIn success, session found. Returning no error.');
+      return { error: null };
+    }
+
+    console.warn('Supabase signIn returned no error, but also no session. This is an unexpected state.');
+    return { error: { message: 'Login failed: No session returned.', name: 'LoginError' } as any };
   };
 
   const signOut = async () => {
