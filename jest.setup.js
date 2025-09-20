@@ -1,26 +1,10 @@
 import '@testing-library/jest-dom';
+require('dotenv').config({ path: '.env.test' });
 
-// Mock Next.js router
-jest.mock('next/navigation', () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    back: jest.fn(),
-    forward: jest.fn(),
-  }),
-}));
+// Polyfill for TextEncoder
+import { TextEncoder, TextDecoder } from 'util';
 
-// Mock the toast component
-jest.mock('@/app/components/ui/toast', () => ({
-  useToast: () => ({
-    showToast: jest.fn(),
-  }),
-}));
-
-// Mock Supabase client
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn().mockReturnThis(),
-    insert: jest.fn().mockReturnThis(),
-    select: jest.fn().mockReturnThis(),
-  },
-}));
+if (typeof global !== 'undefined') {
+  global.TextEncoder = TextEncoder;
+  global.TextDecoder = TextDecoder;
+}
