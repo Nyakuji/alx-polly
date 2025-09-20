@@ -8,6 +8,7 @@ import { deletePollAction } from './actions';
 import PollChart from '@/app/components/PollChart';
 import { supabase } from '@/lib/supabase';
 import { getPollResults } from '@/app/services/poll-results-service';
+import CommentThread from '@/app/components/CommentThread';
 
 type PollContentProps = {
   pollId: string;
@@ -140,6 +141,9 @@ export default function PollContent({
           getPollData();
         }} />
       )}
+      <div className="mt-8">
+        <CommentThread pollId={pollId} />
+      </div>
     </div>
   );
 }
