@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, name: string) => {
-    // Pass the full_name in the options.
+    // Pass the full_name and role in the options.
     // A database trigger will use this to create the user's profile.
     const { error } = await supabase.auth.signUp({
       email,
@@ -60,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       options: {
         data: {
           full_name: name,
+          role: 'user', // Set default role to 'user'
         },
       },
     });
