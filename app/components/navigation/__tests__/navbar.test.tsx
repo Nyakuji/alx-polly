@@ -4,6 +4,14 @@ import Navbar from '../navbar';
 import { useAuth, UserProfile } from '@/context/auth-context';
 import { usePathname, useRouter } from 'next/navigation';
 
+jest.mock('@/lib/supabase', () => ({
+  supabase: {
+    auth: {
+      getUser: jest.fn(),
+    },
+  },
+}));
+
 // Mock the next/navigation module
 jest.mock('next/navigation', () => ({
   usePathname: jest.fn(),
