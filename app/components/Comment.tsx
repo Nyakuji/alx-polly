@@ -38,7 +38,7 @@ export default function Comment({
       {isEditing ? (
         <CommentForm
           pollId={pollId}
-          parentCommentId={id}
+          commentId={id}
           initialContent={content}
           onSubmitSuccess={() => setIsEditing(false)}
         />

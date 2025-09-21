@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/app/components/ui/form';
-import { createComment } from '@/app/polls/[id]/comments/actions';
+import { createComment, updateComment } from '@/app/polls/[id]/comments/actions';
 
 const commentSchema = z.object({
   content: z.string().min(1, 'Comment cannot be empty').max(500, 'Comment cannot exceed 500 characters'),
@@ -17,11 +17,12 @@ const commentSchema = z.object({
 interface CommentFormProps {
   pollId: string;
   parentCommentId?: string;
+  commentId?: string;
   onSubmitSuccess?: () => void;
   initialContent?: string;
 }
 
-export default function CommentForm({ pollId, parentCommentId, onSubmitSuccess, initialContent }: CommentFormProps) {
+export default function CommentForm({ pollId, parentCommentId, commentId, onSubmitSuccess, initialContent }: CommentFormProps) {
   const form = useForm<z.infer<typeof commentSchema>>({
     resolver: zodResolver(commentSchema),
     defaultValues: {
@@ -33,34 +34,50 @@ export default function CommentForm({ pollId, parentCommentId, onSubmitSuccess, 
     const formData = new FormData();
     formData.append('content', values.content);
     formData.append('pollId', pollId);
-    if (parentCommentId) {
-      formData.append('parentCommentId', parentCommentId);
+
+    let result;
+    if (commentId) {
+      formData.append('commentId', commentId);
+      result = await updateComment(formData);
+    } else {
+      if (parentCommentId) {
+        formData.append('parentCommentId', parentCommentId);
+      }
+      result = await createComment(formData);
     }
 
-    await createComment(formData);
-    form.reset();
-    if (onSubmitSuccess) {
-      onSubmitSuccess();
+    if (result?.errors) {
+      for (const key in result.errors) {
+        form.setError(key as any, {
+          type: 'manual',
+          message: result.errors[key as keyof typeof result.errors]?.join(', '),
+        });
+      }
+    } else {
+      form.reset();
+      if (onSubmitSuccess) {
+        onSubmitSuccess();
+      }
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" role="form">
         <FormField
           control={form.control}
           name="content"
-          render={({ field }) => (
+          render={({ field, fieldState }) => (
             <FormItem>
               <FormLabel htmlFor="content">Your Comment</FormLabel>
               <FormControl>
                 <Input id="content" placeholder="Add a comment..." {...field} />
               </FormControl>
-              <FormMessage />
+              <FormMessage error={fieldState.error} />
             </FormItem>
           )}
         />
-        <Button type="submit">Post Comment</Button>
+        <Button type="submit">{commentId ? 'Update Comment' : 'Post Comment'}</Button>
       </form>
     </Form>
   );
