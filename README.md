@@ -8,6 +8,12 @@ Polly is a modern web application for creating, sharing, and participating in po
 - **Poll Management:** Create, view, and edit your own polls.
 - **Interactive Voting:** Participate in polls by casting votes on different options.
 - **Real-time Results:** View the results of polls after voting.
+- **Admin Dashboard:** Manage users and moderate content.
+
+### User Roles and Permissions
+
+- **Regular User:** Can register, log in, create polls, vote on polls, and view results.
+- **Admin User:** Has all the permissions of a regular user, plus the ability to manage users (view, edit, delete) and moderate content.
 
 ## 🛠️ Tech Stack
 
@@ -27,6 +33,7 @@ The project is organized into the following directories:
 ```
 /
 ├── app/                # Next.js App Router pages and components
+│   ├── admin/          # Admin-only pages (e.g., user management)
 │   ├── auth/           # Authentication pages (login, register)
 │   ├── components/     # Shared React components
 │   ├── polls/          # Poll-related pages (create, view, edit)
@@ -82,6 +89,12 @@ I will use AI to scaffold new features and components. This includes:
 - **Component Scaffolding:** Generating boilerplate for new React components, including props, state management, and basic JSX structure.
 - **API Route Generation:** Creating new API endpoints in Next.js, including request/response types and basic logic for interacting with the Supabase backend.
 - **Feature Prototyping:** Quickly building out new features, such as a user profile page or a poll results dashboard, which can then be refined.
+
+### Code Refactoring
+
+- **Simplifying Complex Functions:** Identifying and refactoring overly complex functions into smaller, more manageable pieces.
+- **Improving Readability:** Suggesting changes to improve code readability and maintainability, such as renaming variables or extracting magic numbers into constants.
+- **Performance Optimizations:** Analyzing code to identify performance bottlenecks and suggest optimizations, such as more efficient data fetching or rendering strategies.
 
 ### Testing
 
