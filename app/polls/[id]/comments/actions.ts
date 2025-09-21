@@ -2,19 +2,21 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { supabaseAdmin } from '@/lib/supabase-admin';
-import { z } from 'zod';
+import { supabase } from '@/lib/supabase';
 
-const commentSchema = z.object({
-  content: z.string().min(1, 'Comment cannot be empty').max(500, 'Comment cannot exceed 500 characters'),
-  pollId: z.string().uuid(),
-  parentCommentId: z.string().uuid().optional(),
-});
+const commentSchema = {
+  content: (value: any) => (typeof value === 'string' && value.length > 0 && value.length <= 500) || 'Comment must be between 1 and 500 characters',
+  pollId: (value: any) => (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)) || 'Invalid poll ID',
+  parentCommentId: (value: any) => (value === undefined || (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value))) || 'Invalid parent comment ID',
+};
 
 export async function getComments(pollId: string) {
-  const { data: comments, error } = await supabaseAdmin
+  const { data } = await supabase.auth.getUser();
+  const user = data.user;
+
+  const { data: comments, error } = await supabase
     .from('comments')
-    .select('*, author:profiles(username)')
+    .select('*, author:users ( username )')
     .eq('poll_id', pollId)
     .order('created_at', { ascending: true });
 
@@ -23,33 +25,38 @@ export async function getComments(pollId: string) {
     return [];
   }
 
-  // Ensure comments is an array before calling map
-  const commentsArray = comments || [];
+  if (!comments) {
+    return [];
+  }
 
-  const { data: { user } } = await supabaseAdmin.auth.getUser();
-
-  return commentsArray.map(comment => ({
+  return comments.map(comment => ({
     ...comment,
-    canEdit: user ? user.id === comment.user_id : false,
-    canDelete: user ? user.id === comment.user_id : false,
+    canEdit: user && comment.user_id === user.id,
+    canDelete: user && comment.user_id === user.id,
   }));
 }
 
 export async function createComment(formData: FormData) {
-  const validatedFields = commentSchema.safeParse({
+  const validatedFields = {
     content: formData.get('content'),
     pollId: formData.get('pollId'),
     parentCommentId: formData.get('parentCommentId'),
-  });
+  };
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+  const errors: Record<string, string[]> = {};
+  for (const key in commentSchema) {
+    const validationResult = (commentSchema as any)[key](validatedFields[key as keyof typeof validatedFields]);
+    if (typeof validationResult === 'string') {
+      errors[key] = [validationResult];
+    }
   }
 
-  const { content, pollId, parentCommentId } = validatedFields.data;
-  const { data: { user } } = await supabaseAdmin.auth.getUser();
+  if (Object.keys(errors).length > 0) {
+    return { errors };
+  }
+
+  const { content, pollId, parentCommentId } = validatedFields;
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return {
@@ -59,11 +66,11 @@ export async function createComment(formData: FormData) {
     };
   }
 
-  const { error } = await supabaseAdmin.from('comments').insert({ 
-    content, 
-    poll_id: pollId, 
+  const { error } = await supabase.from('comments').insert({ 
+    content: content as string,
+    poll_id: pollId as string,
     user_id: user.id,
-    parent_comment_id: parentCommentId,
+    parent_comment_id: parentCommentId as string | undefined,
   });
 
   if (error) {
@@ -77,20 +84,33 @@ export async function createComment(formData: FormData) {
   revalidatePath(`/polls/${pollId}`);
 }
 
+const updateCommentSchema = {
+  content: (value: any) => (typeof value === 'string' && value.length > 0 && value.length <= 500) || 'Comment must be between 1 and 500 characters',
+  commentId: (value: any) => (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)) || 'Invalid comment ID',
+  pollId: (value: any) => (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)) || 'Invalid poll ID',
+};
+
 export async function updateComment(formData: FormData) {
-  const validatedFields = commentSchema.safeParse({
+  const validatedFields = {
     content: formData.get('content'),
     commentId: formData.get('commentId'),
-  });
+    pollId: formData.get('pollId'),
+  };
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-    };
+  const errors: Record<string, string[]> = {};
+  for (const key in updateCommentSchema) {
+    const validationResult = (updateCommentSchema as any)[key](validatedFields[key as keyof typeof validatedFields]);
+    if (typeof validationResult === 'string') {
+      errors[key] = [validationResult];
+    }
   }
 
-  const { content, commentId } = validatedFields.data;
-  const { data: { user } } = await supabaseAdmin.auth.getUser();
+  if (Object.keys(errors).length > 0) {
+    return { errors };
+  }
+
+  const { content, commentId, pollId } = validatedFields;
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return {
@@ -100,9 +120,9 @@ export async function updateComment(formData: FormData) {
     };
   }
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('comments')
-    .update({ content })
+    .update({ content: content as string })
     .match({ id: commentId, user_id: user.id });
 
   if (error) {
@@ -113,11 +133,11 @@ export async function updateComment(formData: FormData) {
     };
   }
 
-  revalidatePath(`/polls/${validatedFields.data.pollId}`);
+  revalidatePath(`/polls/${pollId}`);
 }
 
 export async function deleteComment(commentId: string, pollId: string) {
-  const { data: { user } } = await supabaseAdmin.auth.getUser();
+  const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return {
@@ -127,10 +147,10 @@ export async function deleteComment(commentId: string, pollId: string) {
     };
   }
 
-  const { error } = await supabaseAdmin
+  const { error } = await supabase
     .from('comments')
     .delete()
-    .eq('id', commentId);
+    .match({ id: commentId, user_id: user.id });
 
   if (error) {
     return {
