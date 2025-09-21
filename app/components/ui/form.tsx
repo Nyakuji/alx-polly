@@ -95,9 +95,9 @@ const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.Compon
 )
 FormControl.displayName = "FormControl"
 
-const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement>>(
-  ({ className, children, ...props }, ref) => {
-    const { error, formMessageId } = useFormContext()
+const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<HTMLParagraphElement> & { error?: any }>(
+  ({ className, children, error, ...props }, ref) => {
+    const { formMessageId } = useFormContext()
     const body = error ? String(error?.message) : children
 
     if (!body) {
