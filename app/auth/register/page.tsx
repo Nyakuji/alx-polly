@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
+import { FormField } from '@/app/components/ui/form-field';
 import { useToast } from '@/app/components/ui/toast';
 import { Form } from '@/app/components/ui/form';
 
@@ -22,7 +23,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const form = useForm<FormValues>();
+  const { watch, ...form } = useForm<FormValues>();
 
   const password = watch('password');
 
@@ -52,41 +53,54 @@ export default function RegisterPage() {
                   type="text"
                   autoComplete="name"
                   placeholder="John Doe"
-                  {...form.register('fullName', {
+                  {...form.register('name', {
                     required: 'Full name is required',
                     minLength: {
                       value: 3,
                       message: 'Full name must be at least 3 characters',
                     },
                   })}
-                  error={form.formState.errors.fullName?.message}
+                  error={form.formState.errors.name?.message}
+                  icon={
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" />
+                    </svg>
+                  }
+                />
+              </FormField>
 
-                          <FormField label="Email address" htmlFor="email-address" error={form.formState.errors.email?.message}>
-                            <Input
-                              id="email-address"
-                              type="email"
-                              autoComplete="email"
-                              placeholder="you@example.com"
-                              {...form.register('email', {
-                                required: 'Email is required',
-                                pattern: {
-                                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                  message: 'Please enter a valid email address',
-                                },
-                              })}
-                              error={form.formState.errors.email?.message}                icon={
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                }
-              />
-            </FormField>
+              <FormField label="Email address" htmlFor="email-address" error={form.formState.errors.email?.message}>
+                <Input
+                  id="email-address"
+                  type="email"
+                  autoComplete="email"
+                  placeholder="you@example.com"
+                  {...form.register('email', {
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Please enter a valid email address',
+                    },
+                  })}
+                  error={form.formState.errors.email?.message}
+                  icon={
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                  }
+                />
+              </FormField>
 
               <FormField label="Password" htmlFor="password" error={form.formState.errors.password?.message}>
                 <Input
@@ -102,39 +116,39 @@ export default function RegisterPage() {
                     },
                   })}
                   error={form.formState.errors.password?.message}
-                icon={
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                }
-              />
-            </FormField>
+                  icon={
+                    <svg
+                      className="h-5 w-5 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  }
+                />
+              </FormField>
 
             <FormField
               label="Confirm Password"
               htmlFor="confirm-password"
-              error={errors.confirmPassword?.message}
+              error={form.formState.errors.confirmPassword?.message}
             >
               <Input
                 id="confirm-password"
                 type="password"
                 autoComplete="new-password"
                 placeholder="••••••••"
-                {...register('confirmPassword', {
+                {...form.register('confirmPassword', {
                   required: 'Please confirm your password',
                   validate: (value) =>
                     value === password || 'Passwords do not match',
                 })}
-                error={errors.confirmPassword?.message}
+                error={form.formState.errors.confirmPassword?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -160,17 +174,18 @@ export default function RegisterPage() {
           )}
 
           <div>
-                          <Button
-                            type="submit"
-                            disabled={form.formState.isSubmitting}
-                            className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                          >
-                            {form.formState.isSubmitting ? (                <>
+            <Button
+              type="submit"
+              disabled={form.formState.isSubmitting}
+              className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            >
+              {form.formState.isSubmitting ? (
+                <>
                   <svg
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
                     viewBox="0 0 24 24"
+                    fill="none"
                   >
                     <circle
                       className="opacity-25"
@@ -201,8 +216,9 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
-                  </form>
-                </Form>      </div>
+          </form>
+        </Form>
+      </div>
     </div>
   );
 }
