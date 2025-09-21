@@ -9,6 +9,7 @@ import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { FormField } from '@/app/components/ui/form-field';
 import { useToast } from '@/app/components/ui/toast';
+import { Form } from '@/app/components/ui/form';
 
 type FormValues = {
   email: string;
@@ -29,8 +30,8 @@ export default function LoginPage() {
     const fromRegister = searchParams.get('registered');
     if (fromRegister === 'true' && !hasShownRegistrationToast) {
       toast({
-        message: 'Registration successful! Please sign in.',
-        type: 'success',
+        title: 'Registration successful! Please sign in.',
+        variant: 'success',
       });
       setHasShownRegistrationToast(true);
     }
@@ -44,8 +45,8 @@ export default function LoginPage() {
       setApiError(error.message || 'An unexpected error occurred.');
     } else {
       toast({
-        message: 'Successfully signed in!',
-        type: 'success',
+        title: 'Successfully signed in!',
+        variant: 'success',
       });
       router.push('/polls');
     }
