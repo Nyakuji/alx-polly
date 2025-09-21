@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/app/components/ui/form';
+import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/app/components/ui/form';
 import { createComment, updateComment } from '@/app/polls/[id]/comments/actions';
 
 const commentSchema = z.object({
@@ -63,21 +63,19 @@ export default function CommentForm({ pollId, parentCommentId, commentId, onSubm
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4" role="form">
-        <FormField
-          control={form.control}
-          name="content"
-          render={({ field, fieldState }) => (
-            <FormItem>
-              <FormLabel htmlFor="content">Your Comment</FormLabel>
-              <FormControl>
-                <Input id="content" placeholder="Add a comment..." {...field} />
-              </FormControl>
-              <FormMessage error={fieldState.error} />
-            </FormItem>
-          )}
-        />
-        <Button type="submit">{commentId ? 'Update Comment' : 'Post Comment'}</Button>
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 p-4 sm:p-6 bg-white rounded-lg shadow-md" role="form">
+        {/* FormField is replaced by direct usage of FormItem, FormLabel, FormControl, and FormMessage for better control and alignment with Shadcn/UI best practices. */}
+        <FormItem>
+          <FormLabel htmlFor="content" className="text-base sm:text-lg">Your Comment</FormLabel>
+          <FormControl>
+            {/* Input component is enhanced with responsive sizing and accessibility attributes. */}
+            <Input id="content" placeholder="Add a comment..." {...form.register("content")} />
+          </FormControl>
+          {/* FormMessage displays validation errors, with responsive text size. */}
+          <FormMessage />
+        </FormItem>
+        {/* Button component is enhanced with responsive sizing and accessibility attributes. */}
+        <Button type="submit" className="w-full sm:w-auto">{commentId ? 'Update Comment' : 'Post Comment'}</Button>
       </form>
     </Form>
   );

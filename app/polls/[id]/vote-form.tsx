@@ -4,6 +4,9 @@ import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/app/components/ui/button';
 import { castVote } from '@/app/services/vote-service';
+import { RadioGroup, RadioGroupItem } from '@/app/components/ui/radio-group'; // Assuming Shadcn/UI RadioGroup is available
+import { Label } from '@radix-ui/react-label'; // Radix UI Label for RadioGroupItem
+import { Form, FormItem, FormControl, FormMessage } from '@/app/components/ui/form';
 
 type VoteFormProps = {
   pollId: string;
@@ -16,11 +19,7 @@ type FormValues = {
 };
 
 export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormProps) {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const form = useForm<FormValues>({
     defaultValues: { optionId: '' },
     mode: 'onBlur',
   });
@@ -44,31 +43,43 @@ export default function VoteForm({ pollId, options, onVoteSuccess }: VoteFormPro
 
   if (submitted) {
     return (
-      <div className="mt-6">
-        <div className="text-center text-green-600 font-medium">Thank you for voting!</div>
-        <div className="mt-4 text-sm text-gray-600">Results placeholder...</div>
+      <div className="mt-6 p-4 sm:p-6 bg-white rounded-lg shadow-md" role="status">
+        <div className="text-center text-green-600 font-medium text-lg sm:text-xl">Thank you for voting!</div>
+        <p className="mt-4 text-sm text-gray-600 text-center">Results will be displayed shortly.</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-      <div className="space-y-3">
-        {options.map((opt) => (
-          <label key={opt.id} className="flex items-center gap-3 p-3 border rounded-md">
-            <input type="radio" value={opt.id} {...register('optionId', { required: 'Please select an option' })} />
-            <span className="font-medium">{opt.text}</span>
-          </label>
-        ))}
-      </div>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-4 sm:p-6 bg-white rounded-lg shadow-md">
+        <FormItem>
+          <RadioGroup
+            onValueChange={(value) => form.setValue("optionId", value, { shouldValidate: true, shouldTouch: true })}
+            value={form.watch("optionId")}
+            className="flex flex-col space-y-3"
+            aria-label="Poll options"
+          >
+            {options.map((opt) => (
+              <div key={opt.id} className="flex items-center space-x-3">
+                <FormControl>
+                  <RadioGroupItem value={opt.id} id={opt.id} />
+                </FormControl>
+                <Label htmlFor={opt.id} className="text-base font-medium cursor-pointer">
+                  {opt.text}
+                </Label>
+              </div>
+            ))}
+          </RadioGroup>
+          {form.formState.errors.optionId && <FormMessage>{form.formState.errors.optionId.message}</FormMessage>}
+        </FormItem>
 
-      {errors.optionId && <p className="text-sm text-red-600">{errors.optionId.message}</p>}
+        {serverError && <p className="text-sm text-red-600 mt-2" role="alert">{serverError}</p>}
 
-      {serverError && <p className="text-sm text-red-600">{serverError}</p>}
-
-      <Button type="submit" disabled={isPending} className="w-full bg-indigo-600 hover:bg-indigo-700 text-white">
-        {isPending ? 'Submitting…' : 'Submit Vote'}
-      </Button>
-    </form>
+        <Button type="submit" disabled={isPending} className="w-full sm:w-auto mt-4" aria-label={isPending ? 'Submitting vote' : 'Submit vote'}>
+          {isPending ? 'Submitting…' : 'Submit Vote'}
+        </Button>
+      </form>
+    </Form>
   );
 }

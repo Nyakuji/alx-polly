@@ -3,16 +3,16 @@ import { voteOnPoll } from './actions';
 import { supabase } from '@/lib/supabase';
 import PollContent from './poll-content'; // Import the new client component
 
-export default async function PollDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+export default async function PollDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
 
   // Guard: if id is not a UUID, avoid querying Supabase and show not-found
   const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(id);
   if (!isUuid) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-2xl font-bold">Poll not found</h1>
-        <p className="text-gray-600 mt-2">Invalid poll id format.</p>
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-3xl" role="alert">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Poll not found</h1>
+        <p className="text-gray-600 mt-2 text-base sm:text-lg">Invalid poll ID format.</p>
       </div>
     );
   }
@@ -30,9 +30,9 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
 
   if (error || !data) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <h1 className="text-2xl font-bold">Poll not found</h1>
-        <p className="text-gray-600 mt-2">We couldn't find a poll with id {id}.</p>
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-3xl" role="alert">
+        <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Poll not found</h1>
+        <p className="text-gray-600 mt-2 text-base sm:text-lg">We couldn't find a poll with ID {id}.</p>
       </div>
     );
   }
@@ -55,8 +55,9 @@ export default async function PollDetailPage({ params }: { params: Promise<{ id:
   }));
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
-      <Link href="/polls" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block">
+    <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8 max-w-3xl">
+      {/* Accessibility: Ensure link is keyboard navigable and has clear focus state */}
+      <Link href="/polls" className="text-indigo-600 hover:text-indigo-800 mb-4 inline-block focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md">
         &larr; Back to Polls
       </Link>
 

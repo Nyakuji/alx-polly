@@ -1,6 +1,17 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
+import { FormItem, FormLabel, FormControl, FormDescription, FormMessage } from './form';
 
+/**
+ * @deprecated This component is deprecated. Please use the Shadcn/UI Form components directly:
+ * <FormItem>
+ *   <FormLabel>{label}</FormLabel>
+ *   <FormControl>{children}</FormControl>
+ *   {description && <FormDescription>{description}</FormDescription>}
+ *   {error && <FormMessage>{error}</FormMessage>}
+ * </FormItem>
+ * For more details, refer to the Shadcn/UI documentation for Form.
+ */
 interface FormFieldProps {
   children: React.ReactNode;
   label?: string;
@@ -12,17 +23,18 @@ interface FormFieldProps {
 }
 
 export function FormField({ children, label, htmlFor, error, className, required, description }: FormFieldProps) {
+  console.warn("FormField component is deprecated. Please use Shadcn/UI Form components directly.");
   return (
-    <div className={cn('space-y-2', className)}>
+    <FormItem className={cn('space-y-2', className)}>
       {label && (
-        <label htmlFor={htmlFor} className="block text-sm font-medium text-gray-700">
+        <FormLabel htmlFor={htmlFor}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        </FormLabel>
       )}
-      {description && <p className="text-sm text-gray-500">{description}</p>}
-      {children}
-      {error && <p className="text-sm text-red-600">{error}</p>}
-    </div>
+      {description && <FormDescription>{description}</FormDescription>}
+      <FormControl>{children}</FormControl>
+      {error && <FormMessage>{error}</FormMessage>}
+    </FormItem>
   );
 }

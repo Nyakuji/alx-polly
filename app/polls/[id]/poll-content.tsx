@@ -9,6 +9,7 @@ import PollChart from '@/app/components/PollChart';
 import { supabase } from '@/lib/supabase';
 import { getPollResults } from '@/app/services/poll-results-service';
 import CommentThread from '@/app/components/CommentThread';
+import { Button } from '@/app/components/ui/button'; // Import Shadcn/UI Button
 
 type PollContentProps = {
   pollId: string;
@@ -69,63 +70,69 @@ export default function PollContent({
   }));
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-start">
-        <div>
-          <h1 className="text-2xl font-bold mb-2">{title}</h1>
-          {description && <p className="text-gray-600 mb-4">{description}</p>}
+    <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
+        <div className="flex-grow mb-4 sm:mb-0">
+          <h1 className="text-2xl font-bold mb-2 sm:text-3xl" id="poll-title">{title}</h1>
+          {description && <p className="text-gray-600 text-base sm:text-lg leading-relaxed" id="poll-description">{description}</p>}
         </div>
-        <div className="flex space-x-2">
-          <Link href={`/polls/${pollId}/edit`} className="text-indigo-600 hover:text-indigo-800">
-            Edit
-          </Link>
-          <button onClick={handleDelete} className="text-red-600 hover:text-red-800">
+        <div className="flex space-x-2 flex-shrink-0">
+          <Button variant="outline" size="sm" asChild aria-label="Edit poll">
+            <Link href={`/polls/${pollId}/edit`}>
+              Edit
+            </Link>
+          </Button>
+          <Button variant="destructive" size="sm" onClick={handleDelete} aria-label="Delete poll">
             Delete
-          </button>
+          </Button>
         </div>
       </div>
 
       {expiresAt && (
-        <p className="text-sm text-gray-500 mb-4">
+        <p className="text-sm text-gray-500 mb-4" aria-live="polite">
           Expires: {expiresAt.toLocaleDateString()} {expiresAt.toLocaleTimeString()}
         </p>
       )}
 
       {isPollExpired || hasVoted ? (
         <div className="mt-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Results ({totalVotes} votes)</h2>
-            <div className="flex space-x-2">
-              <button
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-2">
+            <h2 className="text-xl font-semibold sm:text-2xl" id="results-heading">Results ({totalVotes} votes)</h2>
+            <div className="flex space-x-2" role="group" aria-labelledby="results-heading">
+              <Button
+                variant={!showChart ? 'default' : 'outline'}
+                size="sm"
                 onClick={() => setShowChart(false)}
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  !showChart ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'
-                }`}>
+                aria-pressed={!showChart}
+                aria-label="Show results as list"
+              >
                 List
-              </button>
-              <button
+              </Button>
+              <Button
+                variant={showChart ? 'default' : 'outline'}
+                size="sm"
                 onClick={() => setShowChart(true)}
-                className={`px-3 py-1 rounded-md text-sm font-medium ${
-                  showChart ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-700'
-                }`}>
+                aria-pressed={showChart}
+                aria-label="Show results as chart"
+              >
                 Chart
-              </button>
+              </Button>
             </div>
           </div>
 
           {showChart ? (
             <PollChart data={chartData} />
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-4" role="list" aria-labelledby="results-heading">
               {optionsWithPercentages.map((option) => (
-                <div key={option.id} className="flex flex-col">
-                  <div className="flex justify-between text-sm font-medium text-gray-700">
-                    <span>{option.text}</span>
-                    <span>
+                <div key={option.id} className="flex flex-col" role="listitem">
+                  <div className="flex justify-between text-sm font-medium text-gray-700 sm:text-base">
+                    <span id={`option-${option.id}`}>{option.text}</span>
+                    <span aria-labelledby={`option-${option.id}`}>
                       {option.percentage.toFixed(1)}% ({option.count})
                     </span>
                   </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1">
+                  <div className="w-full bg-gray-200 rounded-full h-2.5 mt-1" role="progressbar" aria-valuenow={option.percentage} aria-valuemin={0} aria-valuemax={100} aria-labelledby={`option-${option.id}`}>
                     <div
                       className="bg-indigo-600 h-2.5 rounded-full"
                       style={{ width: `${option.percentage}%` }}></div>

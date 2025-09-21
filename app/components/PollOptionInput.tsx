@@ -4,6 +4,7 @@ import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
 import { FormValues } from '@/lib/types';
+import { FormItem, FormControl, FormMessage } from '@/app/components/ui/form';
 
 type PollOptionInputProps = {
   index: number;
@@ -14,30 +15,38 @@ type PollOptionInputProps = {
 };
 
 export function PollOptionInput({ index, register, errors, onRemove, showRemoveButton }: PollOptionInputProps) {
+  const inputId = `option-${index}`;
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-full">
-        <Input
-          {...register(`options.${index}.text`, {
-            required: 'Option cannot be empty',
-            validate: (value) => value.trim() !== '' || 'Option cannot be empty',
-          })}
-          placeholder={`Option ${index + 1}`}
-          error={errors.options?.[index]?.text?.message}
-          icon={
-            <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
-              {index + 1}
-            </span>
-          }
-        />
-        {errors.options?.[index]?.text && <p className="text-sm text-red-600">{errors.options[index].text.message}</p>}
-      </div>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full">
+      <FormItem className="flex-grow w-full">
+        <FormControl>
+          <Input
+            id={inputId}
+            {...register(`options.${index}.text`, {
+              required: 'Option cannot be empty',
+              validate: (value) => value.trim() !== '' || 'Option cannot be empty',
+            })}
+            placeholder={`Option ${index + 1}`}
+            aria-label={`Poll option ${index + 1}`}
+            aria-invalid={!!errors.options?.[index]?.text}
+            aria-describedby={errors.options?.[index]?.text ? `${inputId}-error` : undefined}
+            icon={
+              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-xs font-medium text-indigo-700">
+                {index + 1}
+              </span>
+            }
+          />
+        </FormControl>
+        {errors.options?.[index]?.text && <FormMessage id={`${inputId}-error`}>{errors.options?.[index]?.text?.message}</FormMessage>}
+      </FormItem>
 
       {showRemoveButton && (
         <Button
           type="button"
           onClick={() => onRemove(index)}
-          className="p-2 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-md transition-colors duration-200 ease-in-out"
+          variant="destructive"
+          size="icon"
+          className="flex-shrink-0 mt-2 sm:mt-0"
           aria-label={`Remove option ${index + 1}`}
         >
           <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

@@ -3,8 +3,17 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import { cn } from '@/lib/utils';
 import { Button } from '@/app/components/ui/button';
 import { useAuth } from '@/context/auth-context';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/app/components/ui/sheet'; // Assuming Shadcn/UI Sheet component is available
+import { Menu as MenuIcon } from 'lucide-react'; // Using lucide-react for icons
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -19,173 +28,134 @@ export default function Navbar() {
     router.push('/');
   };
 
+  const navLinks = [
+    { href: '/', label: 'Home' },
+    { href: '/polls', label: 'Polls' },
+  ];
+
+  if (user?.role === 'admin') {
+    navLinks.push({ href: '/admin', label: 'Admin' });
+  }
+
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="bg-white shadow-sm" role="navigation" aria-label="Main navigation">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex">
             <div className="flex-shrink-0 flex items-center">
-              <Link href="/" className="text-xl font-bold text-indigo-600">
+              <Link href="/" className="text-xl font-bold text-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md" aria-label="Polly Home">
                 Polly
               </Link>
             </div>
+            {/* Desktop Navigation */}
             <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-              <Link
-                href="/"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  pathname === '/'
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                Home
-              </Link>
-              <Link
-                href="/polls"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  pathname === '/polls' || pathname.startsWith('/polls/')
-                    ? 'border-indigo-500 text-gray-900'
-                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-              >
-                Polls
-              </Link>
-              {user?.role === 'admin' && (
+              {navLinks.map((link) => (
                 <Link
-                  href="/admin"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    pathname === '/admin'
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    'inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium',
+                    pathname === link.href || (link.href === '/polls' && pathname.startsWith('/polls/'))
                       ? 'border-indigo-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
+                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
+                    'focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md' // Accessibility: focus styles
+                  )}
+                  aria-current={pathname === link.href ? 'page' : undefined}
                 >
-                  Admin
+                  {link.label}
                 </Link>
-              )}
+              ))}
             </div>
           </div>
+          {/* Desktop Auth Buttons */}
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
             {isLoggedIn ? (
               <div className="flex items-center space-x-4">
-                <span className="text-sm text-gray-700">Welcome, {user?.full_name || user?.email}</span>
-                <Button variant="outline" className="text-sm" onClick={handleLogout}>
+                <span className="text-sm text-gray-700" aria-live="polite">Welcome, {user?.full_name || user?.email}</span>
+                <Button variant="outline" size="sm" onClick={handleLogout} aria-label="Logout">
                   Logout
                 </Button>
               </div>
             ) : (
               <div className="flex items-center space-x-4">
-                <Link href="/auth/login">
-                  <Button variant="outline" className="text-sm">
+                <Button variant="outline" size="sm" asChild>
+                  <Link href="/auth/login">
                     Login
-                  </Button>
-                </Link>
-                <Link href="/auth/register">
-                  <Button className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm">Register</Button>
-                </Link>
+                  </Link>
+                </Button>
+                <Button size="sm" className="bg-indigo-600 hover:bg-indigo-700 text-white" asChild>
+                  <Link href="/auth/register">
+                    Register
+                  </Link>
+                </Button>
               </div>
             )}
           </div>
+          {/* Mobile Menu Trigger */}
           <div className="-mr-2 flex items-center sm:hidden">
-            <button
-              onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
-            >
-              <span className="sr-only">Open main menu</span>
-              {isMenuOpen ? (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500"
+                  aria-label="Open main menu"
+                  aria-expanded={isMenuOpen}
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg
-                  className="block h-6 w-6"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
-              )}
-            </button>
+                  <MenuIcon className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[250px] sm:w-[300px]" aria-label="Mobile navigation menu">
+                <SheetHeader>
+                  <SheetTitle className="text-xl font-bold text-indigo-600">Polly</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col space-y-4 mt-6">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        'block px-3 py-2 rounded-md text-base font-medium',
+                        pathname === link.href || (link.href === '/polls' && pathname.startsWith('/polls/'))
+                          ? 'bg-indigo-50 text-indigo-700'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800',
+                        'focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-md' // Accessibility: focus styles
+                      )}
+                      aria-current={pathname === link.href ? 'page' : undefined}
+                      onClick={() => setIsMenuOpen(false)} // Close menu on navigation
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                  <div className="border-t border-gray-200 pt-4 mt-4">
+                    {isLoggedIn ? (
+                      <div className="flex flex-col space-y-2">
+                        <span className="px-3 text-sm text-gray-700" aria-live="polite">Welcome, {user?.full_name || user?.email}</span>
+                        <Button variant="ghost" className="w-full justify-start" onClick={() => { handleLogout(); setIsMenuOpen(false); }} aria-label="Logout">
+                          Logout
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col space-y-2">
+                        <Button variant="ghost" className="w-full justify-start" asChild onClick={() => setIsMenuOpen(false)}>
+                          <Link href="/auth/login">
+                            Login
+                          </Link>
+                        </Button>
+                        <Button variant="ghost" className="w-full justify-start" asChild onClick={() => setIsMenuOpen(false)}>
+                          <Link href="/auth/register">
+                            Register
+                          </Link>
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
-
-      {/* Mobile menu */}
-      {isMenuOpen && (
-        <div className="sm:hidden">
-          <div className="pt-2 pb-3 space-y-1">
-            <Link
-              href="/"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                pathname === '/'
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-              }`}
-            >
-              Home
-            </Link>
-            <Link
-              href="/polls"
-              className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                pathname === '/polls' || pathname.startsWith('/polls/')
-                  ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                  : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-              }`}
-            >
-              Polls
-            </Link>
-            {user?.role === 'admin' && (
-              <Link
-                href="/admin"
-                className={`block pl-3 pr-4 py-2 border-l-4 text-base font-medium ${
-                  pathname === '/admin'
-                    ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                    : 'border-transparent text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-800'
-                }`}
-              >
-                Admin
-              </Link>
-            )}
-          </div>
-          <div className="pt-4 pb-3 border-t border-gray-200">
-            {isLoggedIn ? (
-              <div className="space-y-1">
-                <div className="px-4 py-2 text-sm text-gray-700">Welcome, {user?.full_name || user?.email}</div>
-                <button
-                  onClick={handleLogout}
-                  className="block w-full text-left px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                >
-                  Logout
-                </button>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                <Link
-                  href="/auth/login"
-                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                >
-                  Login
-                </Link>
-                <Link
-                  href="/auth/register"
-                  className="block px-4 py-2 text-base font-medium text-gray-500 hover:text-gray-800 hover:bg-gray-100"
-                >
-                  Register
-                </Link>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </nav>
   );
 }

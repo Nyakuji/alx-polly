@@ -64,28 +64,42 @@ export default function CommentThread({ pollId }: CommentThreadProps) {
   };
 
   const renderComments = (comments: CommentData[]) => {
-    return comments.map((comment) => (
-      <div key={comment.id} className="flex flex-col space-y-4">
-        <Comment
-          id={comment.id}
-          pollId={pollId}
-          author={comment.author.username}
-          content={comment.content}
-          createdAt={comment.created_at}
-          canEdit={comment.canEdit}
-          canDelete={comment.canDelete}
-          onDelete={handleDelete}
-        />
-        {comment.children && <div className="pl-4 border-l-2 border-gray-200">{renderComments(comment.children)}</div>}
-      </div>
-    ));
+    return (
+      <ul className="space-y-4">
+        {comments.map((comment) => (
+          <li key={comment.id}>
+            <div className="flex flex-col space-y-4">
+              <Comment
+                id={comment.id}
+                pollId={pollId}
+                author={comment.author.username}
+                content={comment.content}
+                createdAt={comment.created_at}
+                canEdit={comment.canEdit}
+                canDelete={comment.canDelete}
+                onDelete={handleDelete}
+              />
+              {comment.children && comment.children.length > 0 && (
+                <div className="pl-4 border-l-2 border-gray-200 ml-4 sm:pl-6 sm:ml-6">
+                  {/* Recursively render child comments, with responsive left padding */}
+                  {renderComments(comment.children)}
+                </div>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
+    );
   };
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Comments</h2>
+    <div className="space-y-6 p-4 sm:p-6 bg-white rounded-lg shadow-md">
+      {/* Responsive heading for comments section */}
+      <h2 className="text-xl font-semibold sm:text-2xl">Comments</h2>
+      {/* CommentForm is already responsive and accessible */}
       <CommentForm pollId={pollId} onSubmitSuccess={fetchComments} />
-      <div className="space-y-4">{renderComments(comments)}</div>
+      {/* Render comments with responsive spacing */}
+      <div className="space-y-4 mt-6">{renderComments(comments)}</div>
     </div>
   );
 }

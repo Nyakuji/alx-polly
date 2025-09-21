@@ -1,7 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { createServerClient } from '@supabase/ssr';
+import { createClient } from '@/lib/supabase/server';
 export async function getUsers() {
   // Verify caller is authorized (example)
   const { data: { user } } = await supabaseAdmin.auth.getUser();
@@ -20,18 +20,7 @@ export async function getUsers() {
 }
 
 export async function promoteToAdmin(userId: string) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  );
+  const supabase = createClient();
 
   const { data: { user: currentUser } } = await supabase.auth.getUser();
 
@@ -62,18 +51,7 @@ export async function promoteToAdmin(userId: string) {
 }
 
 export async function demoteToRegularUser(userId: string) {
-  const cookieStore = cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value
-        },
-      },
-    }
-  );
+  const supabase = createClient();
 
   const { data: { user: currentUser } } = await supabase.auth.getUser();
 

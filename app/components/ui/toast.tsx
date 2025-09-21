@@ -1,139 +1,273 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { cn } from '@/lib/utils';
+"use client"
 
-export interface ToastProps {
-  message: string;
-  type?: 'success' | 'error' | 'info' | 'warning';
-  duration?: number;
-  onClose?: () => void;
-  className?: string;
-}
+import * as React from "react"
+import * as ToastPrimitives from "@radix-ui/react-toast"
+import { cva, type VariantProps } from "class-variance-authority"
+import { X } from "lucide-react"
 
-export function Toast({ message, type = 'info', duration = 3000, onClose, className }: ToastProps) {
-  const [isVisible, setIsVisible] = useState(true);
+import { cn } from "@/lib/utils"
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsVisible(false);
-      if (onClose) onClose();
-    }, duration);
+const ToastProvider = ToastPrimitives.Provider
 
-    return () => clearTimeout(timer);
-  }, [duration, onClose]);
-
-  if (!isVisible) return null;
-
-  const typeStyles = {
-    success: 'bg-green-100 border-green-500 text-green-800',
-    error: 'bg-red-100 border-red-500 text-red-800',
-    warning: 'bg-yellow-100 border-yellow-500 text-yellow-800',
-    info: 'bg-blue-100 border-blue-500 text-blue-800',
-  };
-
-  const icons = {
-    success: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fillRule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-    error: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fillRule="evenodd"
-          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-    warning: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fillRule="evenodd"
-          d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-    info: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-        <path
-          fillRule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-          clipRule="evenodd"
-        />
-      </svg>
-    ),
-  };
-
-  return (
-    <div
+const ToastViewport = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Viewport>, React.ComponentPropsWithoutRef<typeof ToastPrimitives.Viewport>>(
+  ({ className, ...props }, ref) => (
+    <ToastPrimitives.Viewport
+      ref={ref}
       className={cn(
-        'fixed bottom-4 right-4 flex items-center p-4 mb-4 border-l-4 rounded-md shadow-md max-w-xs animate-fade-in',
-        typeStyles[type],
-        className,
+        "fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]",
+        className
       )}
-      role="alert"
+      {...props}
+    />
+  )
+)
+ToastViewport.displayName = ToastPrimitives.Viewport.displayName
+
+const toastVariants = cva(
+  "group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-swipeOut data-[state=closed]:fade-out-80 data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full data-[state=closed]:slide-out-to-right-full md:max-w-[420px]",
+  {
+    variants: {
+      variant: {
+        default:
+          "border bg-background text-foreground",
+        destructive:
+          "destructive group border-destructive bg-destructive text-destructive-foreground",
+        success:
+          "group border-green-500 bg-green-500 text-white",
+        info:
+          "group border-blue-500 bg-blue-500 text-white",
+        warning:
+          "group border-yellow-500 bg-yellow-500 text-black",
+      },
+    },
+    defaultVariants: {
+      variant: "default",
+    },
+  }
+)
+
+interface ToastProps extends React.ComponentPropsWithoutRef<typeof ToastPrimitives.Root>, VariantProps<typeof toastVariants> {}
+
+const Toast = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Root>, ToastProps>(
+  ({ className, variant, ...props }, ref) => {
+    return (
+      <ToastPrimitives.Root
+        ref={ref}
+        className={cn(toastVariants({ variant }), className)}
+        {...props}
+      />
+    )
+  }
+)
+Toast.displayName = ToastPrimitives.Root.displayName
+
+const ToastAction = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Action>, React.ComponentPropsWithoutRef<typeof ToastPrimitives.Action>>(
+  ({ className, ...props }, ref) => (
+    <ToastPrimitives.Action
+      ref={ref}
+      className={cn(
+        "inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-secondary focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive",
+        className
+      )}
+      {...props}
+    />
+  )
+)
+ToastAction.displayName = ToastPrimitives.Action.displayName
+
+const ToastClose = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Close>, React.ComponentPropsWithoutRef<typeof ToastPrimitives.Close>>(
+  ({ className, ...props }, ref) => (
+    <ToastPrimitives.Close
+      ref={ref}
+      className={cn(
+        "absolute right-1 top-1 rounded-md p-1 text-foreground/50 opacity-0 transition-opacity hover:text-foreground focus:opacity-100 focus:outline-none focus:ring-1 focus:ring-ring group-hover:opacity-100",
+        className
+      )}
+      toast-close=""
+      {...props}
     >
-      <div className="mr-3">{icons[type]}</div>
-      <div className="text-sm font-medium">{message}</div>
-      <button
-        type="button"
-        className="ml-auto -mx-1.5 -my-1.5 rounded-lg p-1.5 inline-flex h-8 w-8 focus:ring-2 focus:ring-gray-300"
-        onClick={() => {
-          setIsVisible(false);
-          if (onClose) onClose();
-        }}
-        aria-label="Close"
-      >
-        <span className="sr-only">Close</span>
-        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-          <path
-            fillRule="evenodd"
-            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-            clipRule="evenodd"
-          />
-        </svg>
-      </button>
-    </div>
-  );
+      <X className="h-4 w-4" />
+    </ToastPrimitives.Close>
+  )
+)
+ToastClose.displayName = ToastPrimitives.Close.displayName
+
+const ToastTitle = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Title>, React.ComponentPropsWithoutRef<typeof ToastPrimitives.Title>>(
+  ({ className, ...props }, ref) => (
+    <ToastPrimitives.Title ref={ref} className={cn("text-sm font-semibold", className)} {...props} />
+  )
+)
+ToastTitle.displayName = ToastPrimitives.Title.displayName
+
+const ToastDescription = React.forwardRef<React.ElementRef<typeof ToastPrimitives.Description>, React.ComponentPropsWithoutRef<typeof ToastPrimitives.Description>>(
+  ({ className, ...props }, ref) => (
+    <ToastPrimitives.Description ref={ref} className={cn("text-sm opacity-90", className)} {...props} />
+  )
+)
+ToastDescription.displayName = ToastPrimitives.Description.displayName
+
+type Toast = Omit<React.ComponentPropsWithoutRef<typeof Toast>, "type"> & {
+  id: string;
+  title?: string;
+  description?: string;
+  action?: React.ReactNode;
+  variant?: "default" | "destructive" | "success" | "info" | "warning";
+};
+
+type ToasterProps = {
+  toasts: Toast[];
+};
+
+const TOAST_LIMIT = 1;
+const TOAST_REMOVE_DELAY = 5000; // 5 seconds
+
+const actionTypes = {
+  ADD_TOAST: "ADD_TOAST",
+  UPDATE_TOAST: "UPDATE_TOAST",
+  DISMISS_TOAST: "DISMISS_TOAST",
+  REMOVE_TOAST: "REMOVE_TOAST",
+} as const;
+
+type ActionType = typeof actionTypes;
+
+type Action =
+  | { type: ActionType["ADD_TOAST"]; toast: Toast }
+  | { type: ActionType["UPDATE_TOAST"]; toast: Partial<Toast> }
+  | { type: ActionType["DISMISS_TOAST"]; toastId?: Toast["id"] }
+  | { type: ActionType["REMOVE_TOAST"]; toastId?: Toast["id"] };
+
+interface State {
+  toasts: Toast[];
 }
 
-export function useToast() {
-  const [toasts, setToasts] = useState<Array<{ id: string; props: ToastProps }>>([]);
+const reducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case actionTypes.ADD_TOAST:
+      return {
+        ...state,
+        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      };
 
-  // Memoize removeToast
-  const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []); // No dependencies, as setToasts is stable
+    case actionTypes.UPDATE_TOAST:
+      return {
+        ...state,
+        toasts: state.toasts.map((t) =>
+          t.id === action.toast.id ? { ...t, ...action.toast } : t
+        ),
+      };
 
-  // Memoize showToast
-  const showToast = useCallback(
-    (props: Omit<ToastProps, 'onClose'>) => {
-      const id = Math.random().toString(36).substring(2, 9);
-      setToasts((prev) => [...prev, { id, props: { ...props, onClose: () => removeToast(id) } }]);
-      return id;
+    case actionTypes.DISMISS_TOAST:
+      const { toastId } = action;
+
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
+      if (toastId) {
+        return {
+          ...state,
+          toasts: state.toasts.map((t) =>
+            t.id === toastId ? { ...t, open: false } : t
+          ),
+        };
+      } else {
+        return {
+          ...state,
+          toasts: state.toasts.map((t) => ({ ...t, open: false })),
+        };
+      }
+
+    case actionTypes.REMOVE_TOAST:
+      return {
+        ...state,
+        toasts: state.toasts.filter((t) => t.id !== action.toastId),
+      };
+    default:
+      return state;
+  }
+};
+
+const listeners: ((state: State) => void)[] = [];
+
+let memoryState: State = { toasts: [] };
+
+function dispatch(action: Action) {
+  memoryState = reducer(memoryState, action);
+  listeners.forEach((listener) => listener(memoryState));
+}
+
+type ToastWithoutId = Omit<Toast, "id">;
+
+function toast({ ...props }: ToastWithoutId) {
+  const id = `toast-${Math.random().toString(36).substring(2, 9)}`;
+
+  const update = (props: Partial<Toast>) =>
+    dispatch({ type: actionTypes.UPDATE_TOAST, toast: { ...props, id } });
+  const dismiss = () => dispatch({ type: actionTypes.DISMISS_TOAST, toastId: id });
+
+  dispatch({
+    type: actionTypes.ADD_TOAST,
+    toast: {
+      ...props,
+      id,
+      open: true,
+      onOpenChange: (open) => {
+        if (!open) dismiss();
+      },
     },
-    [removeToast],
-  ); // Depends on removeToast
+  });
 
-  const ToastContainer = () => (
-    <div className="fixed bottom-0 right-0 p-4 space-y-4 z-50">
-      {toasts.map(({ id, props }) => (
-        <Toast key={id} {...props} />
-      ))}
-    </div>
-  );
+  return { id, update, dismiss };
+}
+
+function useToast() {
+  const [state, setState] = React.useState<State>(memoryState);
+
+  React.useEffect(() => {
+    listeners.push(setState);
+    return () => {
+      const index = listeners.indexOf(setState);
+      if (index > -1) {
+        listeners.splice(index, 1);
+      }
+    };
+  }, [state]);
 
   return {
-    showToast,
-    ToastContainer,
-    success: (message: string, duration?: number) => showToast({ message, type: 'success', duration }),
-    error: (message: string, duration?: number) => showToast({ message, type: 'error', duration }),
-    warning: (message: string, duration?: number) => showToast({ message, type: 'warning', duration }),
-    info: (message: string, duration?: number) => showToast({ message, type: 'info', duration }),
+    ...state,
+    toast,
   };
+}
+
+export { Toast,
+  ToastAction,
+  ToastClose,
+  ToastDescription,
+  ToastProvider,
+  ToastTitle,
+  ToastViewport,
+  useToast,
+  toastVariants,
+};
+
+export function Toaster() {
+  const { toasts } = useToast()
+
+  return (
+    <ToastProvider>
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
+    </ToastProvider>
+  )
 }

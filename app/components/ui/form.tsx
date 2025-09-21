@@ -17,7 +17,8 @@ const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
       <p
         ref={ref}
         id={formDescriptionId}
-        className={cn("text-[0.8rem] text-muted-foreground", className)}
+        // Responsive text size for descriptions: smaller on mobile, default on larger screens.
+        className={cn("text-xs sm:text-[0.8rem] text-muted-foreground", className)}
         {...props}
       />
     )
@@ -26,6 +27,8 @@ const FormDescription = React.forwardRef<HTMLParagraphElement, React.HTMLAttribu
 FormDescription.displayName = "FormDescription"
 
 const FormField = ({ ...props }) => {
+  // FormField acts as a wrapper for form inputs, integrating with react-hook-form's Controller
+  // to manage input state, validation, and accessibility attributes automatically.
   return (
     <Controller
       {...props}
@@ -48,6 +51,7 @@ const FormItem = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivEl
 
     return (
       <FormItemContext.Provider value={{ id }}>
+        {/* Responsive spacing for form items: `space-y-2` for vertical spacing. */}
         <div ref={ref} className={cn("space-y-2", className)} {...props} />
       </FormItemContext.Provider>
     )
@@ -62,8 +66,11 @@ const FormLabel = React.forwardRef<React.ElementRef<typeof LabelPrimitive.Root>,
     return (
       <LabelPrimitive.Root
         ref={ref}
+        // Associates the label with its corresponding input using `htmlFor` for accessibility.
+        // Visually indicates error state by changing text color.
         className={cn(
           error && "text-destructive",
+          "text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70", // Base label styles
           className
         )}
         htmlFor={formItemId}
@@ -82,11 +89,13 @@ const FormControl = React.forwardRef<React.ElementRef<typeof Slot>, React.Compon
       <Slot
         ref={ref}
         id={formItemId}
+        // Links the form control to its description and error messages for screen readers.
         aria-describedby={
           !formDescriptionId
             ? undefined
             : `${formDescriptionId} ${formMessageId}`
         }
+        // Indicates invalid state for accessibility tools.
         aria-invalid={!!useFormContext().error}
         {...props}
       />
@@ -108,7 +117,8 @@ const FormMessage = React.forwardRef<HTMLParagraphElement, React.HTMLAttributes<
       <p
         ref={ref}
         id={formMessageId}
-        className={cn("text-[0.8rem] font-medium text-destructive", className)}
+        // Responsive text size for error messages: smaller on mobile, default on larger screens.
+        className={cn("text-xs sm:text-[0.8rem] font-medium text-destructive", className)}
         {...props}
       >
         {body}
