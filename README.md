@@ -8,12 +8,23 @@ Polly is a modern web application for creating, sharing, and participating in po
 - **Poll Management:** Create, view, and edit your own polls.
 - **Interactive Voting:** Participate in polls by casting votes on different options.
 - **Real-time Results:** View the results of polls after voting.
+- **Comment on polls:** Engage in discussions by adding comments to polls.
 - **Admin Dashboard:** Manage users and moderate content.
 
 ### User Roles and Permissions
 
 - **Regular User:** Can register, log in, create polls, vote on polls, and view results.
 - **Admin User:** Has all the permissions of a regular user, plus the ability to manage users (view, edit, delete) and moderate content.
+
+## 🚀 Recent Enhancements
+
+This section summarizes the key improvements and fixes implemented recently:
+
+- **Resolved Hydration Errors:** Addressed and fixed multiple instances of nested `<a>` tags causing hydration mismatches in Next.js components.
+- **Improved Form Handling:** Corrected `react-hook-form` integration by ensuring proper `FormProvider` usage and updating form field references in authentication pages.
+- **Fixed Component Import/Export Issues:** Resolved `ReferenceError` and `TypeError` related to undefined components by ensuring correct import paths and component exports (e.g., `Toaster` component, `MenuIcon`).
+- **Enhanced UI Component Integration:** Ensured `shadcn/ui` components are used idiomatically with `next/link` and `react-hook-form` for better accessibility and functionality.
+- **Database Schema Consistency:** Identified and provided a solution for a missing foreign key constraint between the `comments` and `users` tables in the Supabase schema.
 
 ## 🛠️ Tech Stack
 
