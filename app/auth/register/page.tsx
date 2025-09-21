@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/app/components/ui/button';
 import { Input } from '@/app/components/ui/input';
-import { FormField } from '@/app/components/ui/form-field';
+import { useToast } from '@/app/components/ui/toast';
+import { Form } from '@/app/components/ui/form';
 
 type FormValues = {
   name: string;
@@ -21,12 +22,7 @@ export default function RegisterPage() {
   const router = useRouter();
   const [apiError, setApiError] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    formState: { errors, isSubmitting },
-  } = useForm<FormValues>();
+  const form = useForm<FormValues>();
 
   const password = watch('password');
 
@@ -47,51 +43,38 @@ export default function RegisterPage() {
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">Create your account</h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
+        <Form {...form}>
+          <form className="mt-8 space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
           <div className="space-y-4">
-            <FormField label="Full Name" htmlFor="name" error={errors.name?.message}>
-              <Input
-                id="name"
-                type="text"
-                autoComplete="name"
-                placeholder="John Doe"
-                {...register('name', {
-                  required: 'Name is required',
-                  minLength: { value: 2, message: 'Name must be at least 2 characters' },
-                })}
-                error={errors.name?.message}
-                icon={
-                  <svg
-                    className="h-5 w-5 text-gray-400"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                }
-              />
-            </FormField>
+              <FormField label="Full Name" htmlFor="full-name" error={form.formState.errors.fullName?.message}>
+                <Input
+                  id="full-name"
+                  type="text"
+                  autoComplete="name"
+                  placeholder="John Doe"
+                  {...form.register('fullName', {
+                    required: 'Full name is required',
+                    minLength: {
+                      value: 3,
+                      message: 'Full name must be at least 3 characters',
+                    },
+                  })}
+                  error={form.formState.errors.fullName?.message}
 
-            <FormField label="Email address" htmlFor="email-address" error={errors.email?.message}>
-              <Input
-                id="email-address"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                    message: 'Please enter a valid email address',
-                  },
-                })}
-                error={errors.email?.message}
-                icon={
+                          <FormField label="Email address" htmlFor="email-address" error={form.formState.errors.email?.message}>
+                            <Input
+                              id="email-address"
+                              type="email"
+                              autoComplete="email"
+                              placeholder="you@example.com"
+                              {...form.register('email', {
+                                required: 'Email is required',
+                                pattern: {
+                                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                  message: 'Please enter a valid email address',
+                                },
+                              })}
+                              error={form.formState.errors.email?.message}                icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
                     xmlns="http://www.w3.org/2000/svg"
@@ -105,26 +88,20 @@ export default function RegisterPage() {
               />
             </FormField>
 
-            <FormField
-              label="Password"
-              htmlFor="password"
-              description="Must be at least 6 characters with one uppercase letter and one number"
-              error={errors.password?.message}
-            >
-              <Input
-                id="password"
-                type="password"
-                autoComplete="new-password"
-                placeholder="••••••••"
-                {...register('password', {
-                  required: 'Password is required',
-                  minLength: { value: 6, message: 'Password must be at least 6 characters' },
-                  pattern: {
-                    value: /^(?=.*[A-Z])(?=.*[0-9])/,
-                    message: 'Password must contain at least one uppercase letter and one number',
-                  },
-                })}
-                error={errors.password?.message}
+              <FormField label="Password" htmlFor="password" error={form.formState.errors.password?.message}>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  placeholder="••••••••"
+                  {...form.register('password', {
+                    required: 'Password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters',
+                    },
+                  })}
+                  error={form.formState.errors.password?.message}
                 icon={
                   <svg
                     className="h-5 w-5 text-gray-400"
@@ -183,13 +160,12 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
-              className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-            >
-              {isSubmitting ? (
-                <>
+                          <Button
+                            type="submit"
+                            disabled={form.formState.isSubmitting}
+                            className="group relative flex w-full justify-center rounded-md bg-indigo-600 py-2 px-3 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                          >
+                            {form.formState.isSubmitting ? (                <>
                   <svg
                     className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
                     xmlns="http://www.w3.org/2000/svg"
@@ -225,8 +201,8 @@ export default function RegisterPage() {
               </Link>
             </div>
           </div>
-        </form>
-      </div>
+                  </form>
+                </Form>      </div>
     </div>
   );
 }
