@@ -11,4 +11,8 @@ module.exports = {
   transform: {
     '^.+\.(js|jsx|ts|tsx)$': ['babel-jest', { presets: ['next/babel'] }],
   },
+  testMatch: [
+    '<rootDir>/**/*.test.(ts|tsx)',
+    '<rootDir>/__tests__/**/*.test.(ts|tsx)',
+  ],
 };
