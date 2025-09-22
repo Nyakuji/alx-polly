@@ -6,6 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "next build --turbopack",
     "test": "jest",
+    "test:poll-content": "jest app/polls/[id]/__tests__/poll-content.test.tsx",
     "format": "prettier --write .",
     "start": "next start"
   },
@@ -21,8 +22,10 @@
     "@supabase/supabase-js": "^2.56.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "html-to-image": "^1.11.13",
     "lucide-react": "^0.542.0",
     "next": "15.3.0",
+    "qrcode.react": "^4.2.0",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7.62.0",
