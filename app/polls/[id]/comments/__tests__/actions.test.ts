@@ -5,7 +5,7 @@ jest.mock('@/lib/supabase');
 
 describe('Comment Server Actions', () => {
   const user = { id: '123', email: 'test@example.com' };
-  const pollId = '456';
+  const pollId = '11111111-1111-1111-1111-111111111111';
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -36,7 +36,7 @@ describe('Comment Server Actions', () => {
     it('should update a comment', async () => {
       const formData = new FormData();
       formData.append('content', 'This is an updated comment');
-      formData.append('commentId', '789');
+      formData.append('commentId', '22222222-2222-2222-2222-222222222222');
       formData.append('pollId', pollId);
       (supabase.auth.getUser as jest.Mock).mockResolvedValue({ data: { user } });
       const matchMock = jest.fn().mockResolvedValue({ error: null });
@@ -47,7 +47,7 @@ describe('Comment Server Actions', () => {
 
       expect(supabase.from).toHaveBeenCalledWith('comments');
       expect(updateMock).toHaveBeenCalledWith({ content: 'This is an updated comment' });
-      expect(matchMock).toHaveBeenCalledWith({ id: '789', user_id: user.id });
+      expect(matchMock).toHaveBeenCalledWith({ id: '22222222-2222-2222-2222-222222222222', user_id: user.id });
     });
   });
 
@@ -58,11 +58,11 @@ describe('Comment Server Actions', () => {
       const deleteMock = jest.fn(() => ({ match: matchMock }));
       (supabase.from as jest.Mock).mockReturnValue({ delete: deleteMock });
 
-      await deleteComment('789', pollId);
+      await deleteComment('22222222-2222-2222-2222-222222222222', pollId);
 
       expect(supabase.from).toHaveBeenCalledWith('comments');
       expect(deleteMock).toHaveBeenCalled();
-      expect(matchMock).toHaveBeenCalledWith({ id: '789', user_id: user.id });
+      expect(matchMock).toHaveBeenCalledWith({ id: '22222222-2222-2222-2222-222222222222', user_id: user.id });
     });
   });
 
