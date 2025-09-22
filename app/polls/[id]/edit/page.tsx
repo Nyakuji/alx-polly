@@ -3,14 +3,17 @@
 import { useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { pollSchema } from '@/lib/utils';
 import { FormValues } from '@/lib/types';
-import { getPoll, updatePoll } from '@/app/services/poll-service';
+import { getPoll } from '@/app/services/poll-service';
 import { updatePollAction } from '../actions';
 
-export default function EditPollPage({ params }: { params: { id: string } }) {
+export default function EditPollPage() {
   const router = useRouter();
+  const params = useParams();
+  const id = params.id as string;
+
   const {
     register,
     control,
@@ -33,8 +36,9 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
   });
 
   useEffect(() => {
+    if (!id) return; // Don't fetch if id is not available yet
     const fetchPoll = async () => {
-      const poll = await getPoll(params.id);
+      const poll = await getPoll(id);
       reset({
         title: poll.title,
         description: poll.description || '',
@@ -43,11 +47,12 @@ export default function EditPollPage({ params }: { params: { id: string } }) {
       });
     };
     fetchPoll();
-  }, [params.id, reset]);
+  }, [id, reset]);
 
   const onSubmit = async (data: FormValues) => {
-    await updatePollAction(params.id, data);
-    router.push(`/polls/${params.id}`);
+    if (!id) return;
+    await updatePollAction(id, data);
+    router.push(`/polls/${id}`);
   };
 
   return (

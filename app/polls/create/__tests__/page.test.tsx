@@ -12,10 +12,10 @@ jest.mock('next/navigation', () => ({
 }));
 
 // Mock the toast component
-const mockShowToast = jest.fn();
+const mockToast = jest.fn();
 jest.mock('@/app/components/ui/toast', () => ({
   useToast: () => ({
-    showToast: mockShowToast,
+    toast: mockToast,
   }),
 }));
 
@@ -59,7 +59,7 @@ function getSubmitButton() {
 }
 
 async function addOption() {
-  await userEvent.click(screen.getByRole('button', { name: /add option/i }));
+  await userEvent.click(screen.getByRole('button', { name: /add another poll option/i }));
 }
 
 // --- Tests ---
@@ -87,7 +87,7 @@ describe('CreatePollPage', () => {
       await userEvent.click(getSubmitButton());
 
       const expectedErrors = [
-        /please enter a poll title/i,
+        /Title must be at least 5 characters/i,
         /option cannot be empty/i,
       ];
 
@@ -132,7 +132,7 @@ describe('CreatePollPage', () => {
             options: [{ text: 'Blue' }, { text: 'Red' }],
           }),
         );
-        expect(mockShowToast).toHaveBeenCalledWith({ message: 'Poll created successfully!', type: 'success' });
+        expect(mockToast).toHaveBeenCalledWith({ title: 'Success', description: 'Poll created successfully!', variant: 'success' });
         expect(mockPush).toHaveBeenCalledWith(`/polls/${inserted.id}`);
       });
     });
@@ -151,9 +151,10 @@ describe('CreatePollPage', () => {
 
       await waitFor(() => {
         expect(mockCreatePoll).toHaveBeenCalled();
-        expect(mockShowToast).toHaveBeenCalledWith({
-          message: 'Failed to create poll. Please try again.',
-          type: 'error',
+        expect(mockToast).toHaveBeenCalledWith({
+          title: 'Error',
+          description: 'Failed to create poll. Please try again.',
+          variant: 'destructive',
         });
         expect(mockPush).not.toHaveBeenCalled();
       });
