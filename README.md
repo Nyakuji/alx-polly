@@ -10,6 +10,7 @@ Polly is a modern web application for creating, sharing, and participating in po
 - **Real-time Results:** View the results of polls after voting.
 - **Comment on polls:** Engage in discussions by adding comments to polls.
 - **Admin Dashboard:** Manage users and moderate content.
+- **Shareable QR Codes:** Easily share polls across devices with a unique QR code for each poll.
 
 ### User Roles and Permissions
 
@@ -25,6 +26,7 @@ This section summarizes the key improvements and fixes implemented recently:
 - **Fixed Component Import/Export Issues:** Resolved `ReferenceError` and `TypeError` related to undefined components by ensuring correct import paths and component exports (e.g., `Toaster` component, `MenuIcon`).
 - **Enhanced UI Component Integration:** Ensured `shadcn/ui` components are used idiomatically with `next/link` and `react-hook-form` for better accessibility and functionality.
 - **Database Schema Consistency:** Identified and provided a solution for a missing foreign key constraint between the `comments` and `users` tables in the Supabase schema.
+- **QR Code Integration:** Added QR code support for easy sharing of polls. Each poll now has a unique QR code that can be downloaded as a PNG or used to copy the poll link.
 
 ## 🛠️ Tech Stack
 
