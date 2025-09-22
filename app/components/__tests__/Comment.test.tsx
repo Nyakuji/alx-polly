@@ -22,8 +22,8 @@ describe('Comment', () => {
 
   it('should show edit and delete buttons if the user has permission', () => {
     render(<Comment {...defaultProps} />);
-    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /edit comment/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /delete comment/i })).toBeInTheDocument();
   });
 
   it('should not show edit and delete buttons if the user does not have permission', () => {
@@ -34,19 +34,19 @@ describe('Comment', () => {
 
   it('should call the onDelete function when the delete button is clicked', () => {
     render(<Comment {...defaultProps} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(screen.getByRole('button', { name: /delete comment/i }));
     expect(defaultProps.onDelete).toHaveBeenCalledWith(defaultProps.id);
   });
 
   it('should show the comment form when the reply button is clicked', () => {
     render(<Comment {...defaultProps} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Reply' }));
+    fireEvent.click(screen.getByRole('button', { name: /reply to comment/i }));
     expect(screen.getByLabelText('Your Comment')).toBeInTheDocument();
   });
 
   it('should show the comment form when the edit button is clicked', () => {
     render(<Comment {...defaultProps} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Edit' }));
+    fireEvent.click(screen.getByRole('button', { name: /edit comment/i }));
     expect(screen.getByLabelText('Your Comment')).toBeInTheDocument();
   });
 });
