@@ -2,40 +2,44 @@
 
 import { supabase } from '@/lib/supabase';
 import { revalidatePath } from 'next/cache';
-import { deletePoll, updatePoll } from '@/app/services/poll-service';
+import { deletePoll, updatePoll, getPoll } from '@/app/services/poll-service';
 import { FormValues } from '@/lib/types';
 
 export async function voteOnPoll(pollId: string, formData: FormData) {
   const optionId = formData.get('optionId');
 
-  // Early validation - return immediately if invalid
   if (typeof optionId !== 'string' || optionId.trim() === '') {
     return { ok: false, error: 'Missing optionId' };
   }
 
-  // Persist vote in Supabase `votes` table
-  // Schema suggestion:
-  // create table votes (
-  //   id uuid primary key default gen_random_uuid(),
-  //   poll_id uuid not null references polls(id) on delete cascade,
-  //   option text not null,
-  //   created_at timestamptz not null default now()
-  // );
   try {
+    const poll = await getPoll(pollId);
+
+    if (!poll) {
+      return { ok: false, error: 'Poll not found' };
+    }
+
+    if (!poll.options.includes(optionId.trim())) {
+      return { ok: false, error: 'Invalid option' };
+    }
+
     const { error } = await supabase.from('votes').insert({
       poll_id: pollId,
       option: optionId.trim(),
     });
 
-    // Early return on Supabase error
     if (error) {
-      return { ok: false, error: error.message };
+      // Log the error for debugging, but return a generic message to the user
+      console.error('Error inserting vote:', error);
+      return { ok: false, error: 'An unexpected error occurred while casting your vote.' };
     }
 
+    revalidatePath(`/polls/${pollId}`);
     return { ok: true };
   } catch (error) {
-    // Cleaner error handling with proper type checking
-    const message = error instanceof Error ? error.message : 'Failed to record vote';
+    // Log the error for debugging, but return a generic message to the user
+    console.error('Error in voteOnPoll:', error);
+    const message = 'An unexpected error occurred.';
     return { ok: false, error: message };
   }
 }
