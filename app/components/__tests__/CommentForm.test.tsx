@@ -10,6 +10,11 @@ jest.mock('@/app/polls/[id]/comments/actions', () => ({
 }));
 
 describe('CommentForm', () => {
+  beforeEach(() => {
+    (createComment as jest.Mock).mockClear();
+    (updateComment as jest.Mock).mockClear();
+  });
+
   it('should render the form', () => {
     render(<CommentForm pollId="123" />);
     expect(screen.getByLabelText('Your Comment')).toBeInTheDocument();
@@ -18,11 +23,11 @@ describe('CommentForm', () => {
 
   it('should display an error message if the comment is empty', async () => {
     render(<CommentForm pollId="123" />);
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Post Comment' }));
-    });
 
-    expect(await screen.findByText(/Comment cannot be empty/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Post Comment' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/Comment cannot be empty/i);
+    expect(createComment).not.toHaveBeenCalled();
   });
 
   it('should call the createComment server action on submit', async () => {
