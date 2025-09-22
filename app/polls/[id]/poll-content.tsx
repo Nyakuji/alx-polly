@@ -1,8 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { QRCodeSVG } from 'qrcode.react'; // Import QRCodeSVG from qrcode.react
+import { toPng } from 'html-to-image'; // Import toPng for QR code download
+import { ClipboardIcon, DownloadIcon, Share2Icon } from '@radix-ui/react-icons'; // Import icons
 import VoteForm from './vote-form';
 import { deletePollAction } from './actions';
 import PollChart from '@/app/components/PollChart';
@@ -10,6 +13,7 @@ import { supabase } from '@/lib/supabase';
 import { getPollResults } from '@/app/services/poll-results-service';
 import CommentThread from '@/app/components/CommentThread';
 import { Button } from '@/app/components/ui/button'; // Import Shadcn/UI Button
+import { useToast } from '@/app/components/ui/toast'; // Import useToast for notifications
 
 type PollContentProps = {
   pollId: string;
@@ -20,6 +24,8 @@ type PollContentProps = {
   isPollExpired: boolean;
   totalVotes: number;
   optionsWithPercentages: { id: string; text: string; count: number; percentage: number }[];
+  // Add an optional shareUrl prop for easier testing
+  shareUrl?: string;
 };
 
 export default function PollContent({
@@ -31,12 +37,17 @@ export default function PollContent({
   isPollExpired,
   totalVotes: initialTotalVotes,
   optionsWithPercentages: initialOptionsWithPercentages,
+  shareUrl: propShareUrl, // Destructure the new prop
 }: PollContentProps) {
   const [hasVoted, setHasVoted] = useState(false);
   const [showChart, setShowChart] = useState(false);
   const [totalVotes, setTotalVotes] = useState(initialTotalVotes);
   const [optionsWithPercentages, setOptionsWithPercentages] = useState(initialOptionsWithPercentages);
+  // Use the propShareUrl if provided, otherwise determine from window.location.href
+  const currentShareUrl = propShareUrl || (typeof window !== 'undefined' ? window.location.href : '');
+  const qrCodeRef = useRef<HTMLDivElement>(null); // Ref for the QR code element
   const router = useRouter();
+  const { toast } = useToast(); // Initialize toast
 
   const getPollData = async () => {
     const pollResults = await getPollResults(pollId);
@@ -44,6 +55,7 @@ export default function PollContent({
     setOptionsWithPercentages(pollResults.optionsWithPercentages);
   };
 
+  // Effect to subscribe to real-time vote changes
   useEffect(() => {
     const channel = supabase
       .channel(`poll_${pollId}`)
@@ -57,12 +69,56 @@ export default function PollContent({
     };
   }, [pollId]);
 
+  // Handler for deleting a poll
   const handleDelete = async () => {
     if (window.confirm('Are you sure you want to delete this poll?')) {
       await deletePollAction(pollId);
       router.push('/polls');
     }
   };
+
+  // Handler for downloading the QR code as a PNG
+  const handleDownloadQrCode = useCallback(() => {
+    if (qrCodeRef.current) {
+      toPng(qrCodeRef.current, { cacheBust: true })
+        .then((dataUrl) => {
+          const link = document.createElement('a');
+          link.download = `poll-${pollId}-qr.png`;
+          link.href = dataUrl;
+          link.click();
+          toast({
+            title: 'QR Code Downloaded',
+            description: 'The QR code has been downloaded as a PNG image.',
+          });
+        })
+        .catch((err) => {
+          console.error('Failed to download QR code:', err);
+          toast({
+            title: 'Download Failed',
+            description: 'Could not download the QR code. Please try again.',
+            variant: 'destructive',
+          });
+        });
+    }
+  }, [pollId, toast]);
+
+  // Handler for copying the poll link to the clipboard
+  const handleCopyPollLink = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(currentShareUrl);
+      toast({
+        title: 'Link Copied!',
+        description: 'The poll link has been copied to your clipboard.',
+      });
+    } catch (err) {
+      console.error('Failed to copy link:', err);
+      toast({
+        title: 'Copy Failed',
+        description: 'Could not copy the link. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [currentShareUrl, toast]);
 
   const chartData = optionsWithPercentages.map((option) => ({
     name: option.text,
@@ -71,12 +127,50 @@ export default function PollContent({
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-        <div className="flex-grow mb-4 sm:mb-0">
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start mb-4">
+        {/* Poll Title and Description */}
+        <div className="flex-grow mb-4 lg:mb-0">
           <h1 className="text-2xl font-bold mb-2 sm:text-3xl" id="poll-title">{title}</h1>
           {description && <p className="text-gray-600 text-base sm:text-lg leading-relaxed" id="poll-description">{description}</p>}
         </div>
-        <div className="flex space-x-2 flex-shrink-0">
+
+        {/* QR Code and Share Buttons */}
+        {currentShareUrl && (
+          <div className="flex flex-col items-center lg:items-end space-y-4 lg:ml-8 flex-shrink-0">
+            <div ref={qrCodeRef} className="p-2 bg-white border border-gray-200 rounded-lg shadow-sm">
+              <QRCodeSVG
+                value={currentShareUrl}
+                size={128}
+                level="H"
+                includeMargin={false}
+                aria-label="QR code for sharing this poll"
+              />
+            </div>
+            <div className="flex space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDownloadQrCode}
+                aria-label="Download QR code"
+              >
+                <DownloadIcon className="mr-2 h-4 w-4" />
+                Download QR
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyPollLink}
+                aria-label="Copy poll link"
+              >
+                <ClipboardIcon className="mr-2 h-4 w-4" />
+                Copy Link
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Edit and Delete Buttons */}
+        <div className="flex space-x-2 flex-shrink-0 mt-4 lg:mt-0 lg:ml-4">
           <Button variant="outline" size="sm" asChild aria-label="Edit poll">
             <Link href={`/polls/${pollId}/edit`}>
               Edit
