@@ -1,11 +1,10 @@
-
 export const supabase = {
   channel: jest.fn().mockReturnThis(),
   on: jest.fn().mockReturnThis(),
   subscribe: jest.fn(),
   removeChannel: jest.fn(),
   auth: {
-    getUser: jest.fn(),
+    getUser: jest.fn().mockResolvedValue({ data: { user: null } }),
   },
   from: jest.fn(() => ({
     insert: jest.fn(() => ({ error: null })),
