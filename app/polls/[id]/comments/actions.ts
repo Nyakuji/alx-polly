@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase';
 const commentSchema = {
   content: (value: any) => (typeof value === 'string' && value.length > 0 && value.length <= 500) || 'Comment must be between 1 and 500 characters',
   pollId: (value: any) => (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value)) || 'Invalid poll ID',
-  parentCommentId: (value: any) => (value === undefined || (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value))) || 'Invalid parent comment ID',
+  parentCommentId: (value: any) => (value == null || (typeof value === 'string' && /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(value))) || 'Invalid parent comment ID',
 };
 
 export async function getComments(pollId: string) {
