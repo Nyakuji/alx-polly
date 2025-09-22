@@ -3,8 +3,14 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import PollContent from '../poll-content';
 import { toPng } from 'html-to-image';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { useToast } from '@/app/components/ui/toast';
+
+// Mock ResizeObserver for recharts
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
 
 // Mock external modules and hooks
 jest.mock('qrcode.react', () => ({
@@ -20,21 +26,43 @@ jest.mock('next/navigation', () => ({
   useRouter: jest.fn(),
 }));
 
+jest.mock('next/link', () => {
+  const Link = ({ href, children, ...props }: { href: string; children: React.ReactNode }) => (
+    <a href={href} {...props}>
+      {children}
+    </a>
+  );
+  Link.displayName = 'MockedLink';
+  return Link;
+});
+
 jest.mock('@/lib/supabase', () => ({
   supabase: {
     channel: jest.fn(() => ({
-      on: jest.fn(() => ({
-        subscribe: jest.fn(),
-      })),
+      on: jest.fn(() => ({ subscribe: jest.fn() })),
       removeChannel: jest.fn(),
     })),
   },
+}));
+
+jest.mock('@/app/polls/[id]/comments/actions', () => ({
+  getComments: jest.fn().mockResolvedValue([]),
+  createComment: jest.fn(),
+  updateComment: jest.fn(),
+  deleteComment: jest.fn(),
 }));
 
 jest.mock('@/app/components/ui/toast', () => ({
   useToast: jest.fn(() => ({
     toast: jest.fn(),
   })),
+}));
+
+jest.mock('@/app/services/poll-results-service', () => ({
+  getPollResults: jest.fn().mockResolvedValue({
+    totalVotes: 0,
+    optionsWithPercentages: [],
+  }),
 }));
 
 // Mock navigator.clipboard directly
@@ -71,11 +99,11 @@ describe('PollContent QR Code and Sharing', () => {
     });
   });
 
-  it('should render the QR code with the correct poll URL', () => {
+  it('should render the QR code with the correct poll URL', async () => {
     render(<PollContent {...mockPollProps} />);
 
     // Check if the mocked QR code component is rendered
-    const qrCodeElement = screen.getByTestId('mock-qrcode');
+    const qrCodeElement = await screen.findByTestId('mock-qrcode');
     expect(qrCodeElement).toBeInTheDocument();
     expect(qrCodeElement).toHaveTextContent(mockShareUrl);
   });
@@ -83,7 +111,7 @@ describe('PollContent QR Code and Sharing', () => {
   it('should call toPng and trigger download when "Download QR" button is clicked', async () => {
     render(<PollContent {...mockPollProps} />);
 
-    const downloadButton = screen.getByRole('button', { name: /Download QR/i });
+    const downloadButton = await screen.findByRole('button', { name: /Download QR/i });
     fireEvent.click(downloadButton);
 
     await waitFor(() => {
@@ -99,7 +127,7 @@ describe('PollContent QR Code and Sharing', () => {
   it('should copy the poll link to clipboard and show a toast when "Copy Link" button is clicked', async () => {
     render(<PollContent {...mockPollProps} />);
 
-    const copyButton = screen.getByRole('button', { name: /Copy Link/i });
+    const copyButton = await screen.findByRole('button', { name: /Copy poll link/i });
     fireEvent.click(copyButton);
 
     await waitFor(() => {
